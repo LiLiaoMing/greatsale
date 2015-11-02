@@ -1,0 +1,972 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <a style="display: none;" href="range.html" class="btn" id="btn-continue"><img src="img/button_continue.png" ></a>
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <div id="normal_page">
+                <h3>
+                    <span>WELCOME</span>
+                    <span class="choose-title">PLEASE WAIT WHILE WE CHECK FOR UPDATES<strong id="progress_percent"></strong></span>
+
+                </h3>
+            </div>
+            <div id="no_connection_page" style="display:none">
+                <h3>
+                    <span>UH OH!</span>
+                    <span class="choose-error">WE DID NOT DETECT AN INTERNET CONNECTION.</span>
+                    <span class="choose-title">The previous data will be used until we detect an internet connection.</span>
+                </h3>
+            </div>
+        </div>
+
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/imgcache.js"></script>
+    <script type="text/javascript" src="js/qimgcache.js"></script>
+
+    <script type="text/javascript">
+        var server_base_url ="http://www.ccm-saf.com";
+        var api_url = 'http://ccm-saf.com/api/new';
+        var db_name="saf.db";
+        localStorage.clear();
+        localStorage.setItem('server_base_url', server_base_url);
+        localStorage.setItem('db_name', db_name);
+        var async_func_num = 0; 
+        var loading_txt = [".", "..", "..."];
+        var loading_count = 0;
+        var data;
+        var downloading_count = 0;
+        var loading_timer;
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            StatusBar.hide();
+            loadApp();
+        }
+
+        function loadApp() {
+
+            if (!hostReachable())
+            {
+                loading_error_msg();
+                return;
+            }
+
+            // Initialize
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            initImgCache();
+
+            get_ajax_data();
+        
+            checking_uploads_msg();
+        }
+
+        
+
+        function checking_uploads_msg() {
+            $("#progress_percent").html(loading_txt[loading_count]);
+            loading_count++;
+            loading_count = loading_count % 3;  
+            loading_timer = setTimeout(function(){ checking_uploads_msg() }, 500);
+        }
+
+        function loading_error_msg() {
+            $("#btn-continue").show();
+            $("#normal_page").hide();
+            $("#no_connection_page").show();
+            clearTimeout(loading_timer);
+        }
+
+        function get_ajax_data() {
+            $.ajax({
+                type: 'GET',
+                url: api_url,
+                dataType: 'json',
+                success: function (return_data) {
+                    print_pos("get_ajax_data  - success() in");
+                    data = return_data;
+                    check_tables_for_updates();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status == 500) {
+                      print_error('get_ajax_data: ' + jqXHR.responseText);
+                    } else {
+                      print_error('get_ajax_data: Unexpected ajax error.' + jqXHR.status);
+                    }
+                    loading_error_msg();
+                }
+            });
+        }
+
+        function check_tables_for_updates()
+        {
+        
+            db_initialize();
+
+            async_func_num = 0;
+            print_pos("check_tables_for_updates() in");
+            for (var key in data)
+            {
+                check_new(key);                    
+            }
+
+            t = setTimeout(function(){ check_update_tables() }, 1000);
+        }
+
+        function db_initialize() {
+
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            db.transaction(function(tx) {
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS languages (' + 
+                                'id integer primary key,' + 
+                                'language text, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS ranges (' + 
+                                'id integer primary key,' + 
+                                'name text, ' + 
+                                'image text, ' + 
+                                'language_id integer, ' + 
+                                'created_at text, ' + 
+                                'updated_at text, ' +
+                                'active integer)');
+                    
+                tx.executeSql('CREATE TABLE IF NOT EXISTS application_product (' + 
+                                'id integer primary key autoincrement,' + 
+                                'application_id integer, ' + 
+                                'product_id integer)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS applications (' + 
+                                'id integer primary key,' + 
+                                'range_id integer,' + 
+                                'name text, ' + 
+                                'button_image text, ' + 
+                                'main_image text, ' +
+                                'ranking integer, ' +
+                                'created_at text, ' +
+                                'updated_at text)');
+                
+                tx.executeSql('CREATE TABLE IF NOT EXISTS features (' + 
+                                'id integer primary key,' + 
+                                'name text, ' + 
+                                'image text, ' + 
+                                'advantage text, ' + 
+                                'benefit text, ' +
+                                'ranking integer, ' +
+                                'created_at text, ' +
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS media (' + 
+                                'id integer primary key,' + 
+                                'media_type text, ' + 
+                                'name text, ' + 
+                                'image text, ' + 
+                                'video_file text, ' + 
+                                'video_url text, ' + 
+                                'description text, ' + 
+                                'created_at text, ' + 
+                                'updated_at text, ' + 
+                                'thumbnail text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS options (' + 
+                                'id integer primary key,' + 
+                                'name text, ' + 
+                                'image text, ' + 
+                                'advantage text, ' + 
+                                'benefit text, ' +
+                                'ranking integer, ' +
+                                'created_at text, ' +
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS product_brands (' + 
+                                'id integer primary key,' + 
+                                'name text, ' + 
+                                'image text, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS products (' + 
+                                'id integer primary key,' + 
+                                'product_type_id integer,' +  
+                                'product_brand_id integer,' +  
+                                'name text, ' + 
+                                'image text, ' + 
+                                'preview_description text, ' + 
+                                'preview_capacity_info_1 text, ' + 
+                                'preview_capacity_info_2 text, ' +
+                                'preview_capacity_info_3 text, ' +
+                                'extended_capacity_info_1 text, ' +
+                                'extended_capacity_info_2 text, ' +
+                                'animation_type text, ' +
+                                'ranking integer, ' +
+                                'no_secondary_suspension integer, ' +
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS product_types (' + 
+                                'id integer primary key,' + 
+                                'name text, ' +
+                                'note text, ' +
+                                'created_at text, ' +
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS product_images (' + 
+                                'id integer primary key,' + 
+                                'product_id integer,' + 
+                                'application_id integer, ' + 
+                                'image text, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS feature_product (' + 
+                                'id integer primary key,' + 
+                                'feature_id integer,' + 
+                                'product_id integer, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS feature_media (' + 
+                                'id integer primary key,' + 
+                                'feature_id integer,' + 
+                                'media_id integer, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS option_product (' + 
+                                'id integer primary key,' + 
+                                'option_id integer,' + 
+                                'product_id integer, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS option_media (' + 
+                                'id integer primary key,' + 
+                                'option_id integer,' + 
+                                'media_id integer, ' + 
+                                'created_at text, ' + 
+                                'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS companies (' +
+                        'id integer primary key,' +
+                        'name text,' +
+                        'image text, ' +
+                        'created_at text, ' +
+                        'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS default_products (' +
+                        'id integer primary key,' +
+                        'company_id integer,' +
+                        'application_id integer,' +
+                        'product_type_id integer,' +
+                        'product_id integer,' +
+                        'created_at text, ' +
+                        'updated_at text)');
+
+                tx.executeSql('CREATE TABLE IF NOT EXISTS sub_options (' +
+                        'id integer primary key,' +
+                        'name text,' +
+                        'description text,' +
+                        'size text,' +
+                        'option_id integer,' +
+                        'created_at text, ' +
+                        'updated_at text)');
+
+                print_pos("initialize() end");
+                
+            }, function(e) {
+              print_error('initialize  : ' + e.message);
+            });
+        }
+
+        function check_new(table_name) {
+         
+            var table = data[table_name];
+
+            db.transaction(function(tx){
+                if (table_name == "application_product" )
+                {
+                    for(var i=0; i<table.length; i++) {
+                        async_func_num++;
+                        str = 'tx.executeSql("select * from '+ table_name +' where application_id = ? and product_id = ? ", [' + table[i]['application_id'] + ', ' + table[i]['product_id'] + '], function(tx, res) {' + 'set_new("' + table_name + '", ' + i + ', res.rows.length); async_func_num--;}, function(e) {async_func_num--;});';    
+                        eval(str);
+                    }
+                }
+                else
+                {
+                    for(var i=0; i<table.length; i++) {
+                        async_func_num++;
+                        str = 'tx.executeSql("select * from '+ table_name +' where id = ? ", [' + table[i]['id'] + '], function(tx, res) {' + 'set_new("' + table_name + '", ' + i + ', res.rows.length); async_func_num--;}, function(e) {async_func_num--;});';    
+                        eval(str);
+                    }
+                }
+            },
+            function (e) {
+                print_error('check_new (' + table_name + ')  : ' + e.message);
+            });
+        }
+
+        function set_new(table_name, id, value)
+        {
+            print_pos("set_new() success");
+            data[table_name][id]['new'] = value; 
+        }
+
+        function check_update_tables()
+        {
+            if (async_func_num != 0 )
+            {
+                t = setTimeout(function(){ check_update_tables() }, 1000);
+            //    print_error("async_func_num : " + async_func_num);
+                return;
+            }
+
+            print_pos("check_update_tables() in");
+            
+            async_func_num = 0;
+
+            for (var key in data)
+            {
+                if (key == 'model_point')
+                    continue;
+                check_update(key);           
+            }
+
+            t = setTimeout(function(){ update_tables() }, 1000);
+        }
+
+        function check_update(table_name){
+            if (table_name == 'application_product' )
+                return;
+
+            var table = data[table_name];
+            
+            db.transaction(function(tx){
+                
+                for(var i=0; i<table.length; i++) {
+                    if (table[i]['new'] == 0)
+                        continue;
+                    async_func_num++;
+                    str = 'tx.executeSql("select * from '+ table_name +' where id = ? and updated_at = ?", [' + table[i]['id'] + ', "' + table[i]['updated_at'] + '"], function(tx, res) {' + 'set_update("' + table_name + '", ' + i + ', res.rows.length);async_func_num--;}, function(e) {async_func_num--;});';    
+                    eval(str);
+                }
+            },
+            function (e) {
+                print_error('check_update (' + table_name + ')  : ' + e.message);
+            });
+        }
+
+        function set_update(table_name, id, value)
+        {
+            if (value == 0)
+            {
+                print_pos("set_update() success");
+                data[table_name][id]['new'] = 0;    
+                db.transaction(function(tx){
+                    tx.executeSql('DELETE FROM ' + table_name +' where id = ? ', [ data[table_name][id]['id']]);
+                },
+                function (e) {
+                    print_error('set_update (' + table_name + ', ' + id + ', ' + value + ')  : ' + e.message);
+                });
+            }
+        }
+
+        function update_tables()
+        {
+            if (async_func_num != 0 )
+            {
+                t = setTimeout(function(){ update_tables() }, 1000);
+                return;
+            }
+            
+            db.transaction(function(tx){
+                
+                table = data['languages'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO languages ' +
+                        '(id, language, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?)',  
+                        [table[i]['id'], table[i]['language'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (languages): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> languages' + e.message);
+                        });
+                }
+
+                table = data['ranges'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO ranges ' +
+                        '(id, name, image, language_id, created_at, updated_at, active) ' +
+                        'VALUES (?,?,?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['name'], table[i]['image'], table[i]['language_id'], table[i]['created_at'], table[i]['updated_at'], table[i]['active']], 
+                        function(tx, res) {
+                              print_pos("Inserted (ranges): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> ranges' + e.message);
+                        });
+                }
+
+                table = data['application_product'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO application_product ' +
+                        '(application_id, product_id) ' +
+                        'VALUES (?,?)',  
+                        [table[i]['application_id'], table[i]['product_id']], 
+                        function(tx, res) {
+                              print_pos("Inserted (application_product): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> application_product' + e.message);
+                        });
+                }
+
+                table = data['applications'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO applications ' +
+                        '(id, range_id, name, button_image, main_image, created_at, updated_at, ranking) ' +
+                        'VALUES (?,?,?,?,?,?,?,?)',
+                        [table[i]['id'], table[i]['range_id'], table[i]['name'], table[i]['button_image'], table[i]['main_image'], table[i]['created_at'], table[i]['updated_at'], table[i]['ranking']],
+                        function(tx, res) {
+                              print_pos("Inserted (applications): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> applications' + e.message);
+                        });
+                }
+
+                table = data['features'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO features ' +
+                        '(id, name, image, advantage, benefit, created_at, updated_at, ranking) ' +
+                        'VALUES (?,?,?,?,?,?,?,?)',
+                        [table[i]['id'], table[i]['name'], table[i]['image'], table[i]['advantage'], table[i]['benefit'], table[i]['created_at'], table[i]['updated_at'], table[i]['ranking']],
+                        function(tx, res) {
+                              print_pos("Inserted (features): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> features' + e.message);
+                        });
+                }
+
+                table = data['media'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO media ' +
+                        '(id, media_type, name, image, video_file, video_url, description, created_at, updated_at, thumbnail) ' +
+                        'VALUES (?,?,?,?,?,?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['media_type'], table[i]['name'], table[i]['image'], table[i]['video_file'], table[i]['video_url'], table[i]['description'], table[i]['created_at'], table[i]['updated_at'], table[i]['thumbnail']], 
+                        function(tx, res) {
+                              print_pos("Inserted (media): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> media' + e.message);
+                        });
+                }
+
+                table = data['options'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO options ' +
+                        '(id, name, image, advantage, benefit, created_at, updated_at, ranking) ' +
+                        'VALUES (?,?,?,?,?,?,?,?)',
+                        [table[i]['id'], table[i]['name'], table[i]['image'], table[i]['advantage'], table[i]['benefit'], table[i]['created_at'], table[i]['updated_at'], table[i]['ranking']],
+                        function(tx, res) {
+                              print_pos("Inserted (options): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> options' + e.message);
+                        });
+                }
+
+                table = data['product_brands'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO product_brands ' +
+                        '(id, name, image, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['name'], table[i]['image'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (product_brands): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> product_brands' + e.message);
+                        });
+                }
+
+
+                table = data['products'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO products ' +
+                        '(id, product_type_id, product_brand_id, name, image, preview_description, preview_capacity_info_1, preview_capacity_info_2, preview_capacity_info_3, extended_capacity_info_1, extended_capacity_info_2, animation_type, created_at, updated_at, ranking, no_secondary_suspension) ' +
+                        'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                        [table[i]['id'], table[i]['product_type_id'], table[i]['product_brand_id'], table[i]['name'], table[i]['image'], table[i]['preview_description'], table[i]['preview_capacity_info_1'], table[i]['preview_capacity_info_2'], table[i]['preview_capacity_info_3'], table[i]['extended_capacity_info_1'], table[i]['extended_capacity_info_2'], table[i]['animation_type'], table[i]['created_at'], table[i]['updated_at'], table[i]['ranking'], table[i]['no_secondary_suspension']],
+                        function(tx, res) {
+                              print_pos("Inserted (products): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> products' + e.message);
+                        });
+                }
+
+                table = data['product_types'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO product_types ' +
+                        '(id, name, note, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',
+                        [table[i]['id'], table[i]['name'], table[i]['note'], table[i]['created_at'], table[i]['updated_at']],
+                        function(tx, res) {
+                              print_pos("Inserted (product_types): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> product_types' + e.message);
+                        });
+                }
+
+                table = data['product_images'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO product_images ' +
+                        '(id, product_id, application_id, image, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['product_id'], table[i]['application_id'], table[i]['image'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (product_images): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> product_images' + e.message);
+                        });
+                }
+
+                table = data['feature_product'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO feature_product ' +
+                        '(id, feature_id, product_id, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['feature_id'], table[i]['product_id'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (feature_product): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> feature_product' + e.message);
+                        });
+                }
+
+                table = data['feature_media'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    console.log("-****************************-" + table[i]['media_id']);
+                    tx.executeSql('INSERT INTO feature_media ' +
+                        '(id, feature_id, media_id, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['feature_id'], table[i]['media_id'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                            print_pos("Inserted (feature_media): " + res.insertId );
+                            //console.log("---" + res.rows.item(i)['id']);
+                        },function(e) {
+                            print_error('update_tables -> feature_media' + e.message);
+                        });
+                }
+
+                table = data['option_product'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO option_product ' +
+                        '(id, option_id, product_id, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['option_id'], table[i]['product_id'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (option_product): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> option_product' + e.message);
+                        });
+                    
+                }
+
+                table = data['option_media'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO option_media ' +
+                        '(id, option_id, media_id, created_at, updated_at) ' +
+                        'VALUES (?,?,?,?,?)',  
+                        [table[i]['id'], table[i]['option_id'], table[i]['media_id'], table[i]['created_at'], table[i]['updated_at']], 
+                        function(tx, res) {
+                              print_pos("Inserted (option_media): " + res.insertId );
+                        },function(e) {
+                            print_error('update_tables -> option_media' + e.message);
+                        });
+                }
+
+                table = data['companies'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO companies ' +
+                            '(id, name, image, created_at, updated_at) ' +
+                            'VALUES (?,?,?,?,?)',
+                            [table[i]['id'], table[i]['name'], table[i]['image'], table[i]['created_at'], table[i]['updated_at']],
+                            function(tx, res) {
+                                print_pos("Inserted (companies): " + res.insertId );
+                            },function(e) {
+                                print_error('update_tables -> companies' + e.message);
+                            });
+                }
+
+                table = data['default_products'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO default_products ' +
+                            '(id, company_id, application_id, product_type_id, product_id, created_at, updated_at) ' +
+                            'VALUES (?,?,?,?,?,?,?)',
+                            [table[i]['id'], table[i]['company_id'], table[i]['application_id'], table[i]['product_type_id'], table[i]['product_id'], table[i]['created_at'], table[i]['updated_at']],
+                            function(tx, res) {
+                                print_pos("Inserted (default_products): " + res.insertId );
+                            },function(e) {
+                                print_error('update_tables -> default_products' + e.message);
+                            });
+                }
+
+                table = data['sub_options'];
+                for(var i=0; i<table.length; i++) {
+
+                    if (table[i]['new'] != 0 )
+                        continue;
+                    tx.executeSql('INSERT INTO sub_options ' +
+                            '(id, name, description, size, option_id, created_at, updated_at) ' +
+                            'VALUES (?,?,?,?,?,?,?)',
+                            [table[i]['id'], table[i]['name'], table[i]['description'], table[i]['size'], table[i]['option_id'], table[i]['created_at'], table[i]['updated_at']],
+                            function(tx, res) {
+                                print_pos("Inserted (sub_options): " + res.insertId );
+                            },function(e) {
+                                print_error('update_tables -> sub_options' + e.message);
+                            });
+                }
+                print_pos("update_tables() end");
+
+            },
+            function (e) {
+                print_error('update_tables : ' + e.message);
+            });
+            
+            delete_resource();
+        }
+
+        function delete_resource() {
+        
+            async_func_num=0;
+
+            table = data['ranges'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['applications'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['button_image'];
+                    removeFile(url);
+                    url = server_base_url + table[i]['main_image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['features'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+            
+            table = data['media'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                    url = server_base_url + table[i]['video_file'];
+                    removeFile(url);
+                    url = server_base_url + table[i]['thumbnail'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['options'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['product_brands'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['products'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['product_images'];
+            for(var i=0; i<table.length; i++) {
+                
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+
+            table = data['companies'];
+            for(var i=0; i<table.length; i++) {
+
+                if (table[i]['new'] == 0 ){
+                    url = server_base_url + table[i]['image'];
+                    removeFile(url);
+                }
+            }
+            
+            t = setTimeout(function(){ check_deleting_complete() }, 1000);
+        }
+
+        function check_deleting_complete() {
+            if (async_func_num != 0 )
+            {
+                t = setTimeout(function(){ check_deleting_complete() }, 1000);
+                //print_error("async_func_num : " + async_func_num);
+                return;
+            }
+            //print_pos("check_deleting_complete    in");
+            download_resource();
+
+        }
+
+        function download_resource() {
+            
+            async_func_num = 0;
+            table = data['ranges'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+
+            table = data['applications'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['button_image']);
+                download_file(table[i]['main_image']);
+            }
+
+            table = data['features'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+            
+            table = data['media'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+                download_file(table[i]['video_file']);
+                download_file(table[i]['thumbnail']);
+            }
+
+            table = data['options'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+
+            table = data['product_brands'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+
+            table = data['products'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+
+            table = data['product_images'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+            table = data['companies'];
+            for(var i=0; i<table.length; i++) {
+                download_file(table[i]['image']);
+            }
+  
+            t = setTimeout(function(){ check_downloading_complete() }, 1000);
+        }
+
+        function download_file(sub_url)
+        {
+            if (sub_url == null)
+                return;
+            url = server_base_url + sub_url;
+            downloadFile(url);
+        }
+
+        function downloadFile(url) {
+            if (async_func_num > 5)
+            {
+               t = setTimeout(function(){ downloadFile(url) }, 1000);
+                return;
+            }
+
+            async_func_num++;
+            
+            ImgCache.isCached(url, function(src, res) {
+                if (!res)
+                {
+                    print_pos(url + "-----!res------");
+
+                    ImgCache.cacheFile(url, function () {  
+
+                            print_pos("Downloaded successfully! --- " + url);
+                            async_func_num--;
+                        }, function (e) {
+                            async_func_num--;
+                            print_error('downloadFile   ' + e);
+                        
+                        }, function (progressEvent) {
+                            
+                            if (progressEvent.lengthComputable) {
+                              //console.log("downloading...");
+                              //console.log(progressEvent.loaded / progressEvent.total);
+                            } else {
+                              //console.log("downloading...");
+                            }
+                    });
+                }
+                else
+                {
+                    //print_error(url + "------res------");    
+                    async_func_num--;
+                }
+
+            }, function(e){
+                print_error('downloadFile  ' + e.message);
+                async_func_num--;
+            });
+            
+        }
+
+        function removeFile(url) {
+
+            async_func_num++;
+            ImgCache.isCached(url, function(src, res) {
+
+                if (res)
+                {
+                    ImgCache.removeFile(url, function(){
+                        print_pos("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   deleted file successfully");
+                        async_func_num--;
+                    },
+                    function(e){
+                        print_error("removeFile (" + res + ") : " + e);
+                        async_func_num--;
+                    });
+                }
+                else
+                {
+                    async_func_num--;
+                }
+
+            }, function(e){
+                print_error(e.message);
+                async_func_num--;
+            });
+            
+        }
+
+        function check_downloading_complete() {
+            print_pos('check_downloading_complete : ' + async_func_num);
+            if (async_func_num != 0 )
+            {
+                t = setTimeout(function(){ check_downloading_complete() }, 1000);
+                //print_error("async_func_num : " + async_func_num);
+                return;
+            }
+            next_page();
+        }
+
+        function next_page()
+        {
+            window.location = "range.html";
+        }
+
+        function print_pos(pos)
+        {
+            console.log("%c ***** Current position ******      ------- "  + pos + " ------", "color:#0000aa");
+        }
+
+        function print_error(msg)
+        {
+            console.log("%c ***** greatdane error ****** : " + msg, "color:#ff0000");
+        }
+
+
+    </script>
+    </body> 
+</html>
+
+

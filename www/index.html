@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <section id="login_bg">
+            <div class="container">
+                <div class="row" style="    margin-top:30%">
+                    <div class="col-sm-1"></div>
+                    <div class="col-sm-5">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="usr" placeholder="Username" >
+                        </div>
+                        <div class="form-group">
+                            <input type="password" class="form-control" id="pwd" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="col-sm-5">
+                        <div class="form-group">
+                            <label id="login_description">
+                                Please log in with your username and password. You may skip the login for a maximum period of 5 days.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-1"></div>
+                    <div class="col-sm-5">
+                        <div class="form-group">
+                            <img src="images/skip_btn.png" id="skip_btn" class="img-rounded pull-right" width="130" height="40" style="margin-left:20px;display: none;" onclick="skip();" >
+                            <img src="images/login_btn.png" id="login_btn" class="img-rounded pull-right" width="130" height="40" onclick="soap();">
+                        </div>
+                    </div>
+                    <div class="col-sm-5">
+                        <div class="form-group">
+                            <label id="login_result">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-1"></div>
+                </div>
+            </div>
+        </section>
+        <div style="display: none;">
+        </div>
+		<script src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+
+<script type="text/javascript">
+    var err_msg_invalid = "Invalid username or password. <br/> Please try again.";
+    var err_msg_skip = "It has been more than 5 days since your last login. Please log in to continue.";
+    
+    document.addEventListener('deviceready', onDeviceReady, false);
+    function onDeviceReady() {
+        skip();
+        return;
+        
+        if (!hostReachable())
+        {
+            $("#login_result").html(err_msg_skip);
+        }
+
+        var dt = new Date();
+        var now = dt.getTime();
+
+        lasttime = getLastTime();
+        if (isRealValue(lasttime))
+        {
+            var during = (parseInt(now) - parseInt(lasttime))/3600000;
+
+            if (parseFloat(during) < 1)
+            {
+                $("#login_result").html("");
+                $("#skip_btn").show();
+            }
+            else
+            {
+                $("#login_result").html(err_msg_skip);   
+                $("#skip_btn").hide();
+            }
+
+        }
+        else
+        {
+            setLastTime();
+            $("#login_result").html("");
+            $("#skip_btn").show();
+        }
+                
+    }
+
+    function hostReachable() {
+
+      // Handle IE and more capable browsers
+      var xhr = new ( window.ActiveXObject || XMLHttpRequest )( "Microsoft.XMLHTTP" );
+      var status;
+
+      // Open new request as a HEAD to the root hostname with a random param to bust the cache
+      xhr.open( "HEAD", "http://www.ccm-gd.com/?rand=" + Math.floor((1 + Math.random()) * 0x10000), false );
+
+      // Issue request and handle response
+      try {
+        xhr.send();
+        return ( xhr.status >= 200 && (xhr.status < 300 || xhr.status === 304) );
+      } catch (error) {
+        return false;
+      }
+
+    }
+
+    function soap() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('POST', 'https://guiportal.greatdane.net/soa/http/gdauth', true);
+
+        // build SOAP request
+        var sr =
+            '<soap:Envelope xmlns:c="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:n1="http://ldap.gdlp.com/"><soap:Header></soap:Header><soap:Body><n1:getLogin id="o0" c:root="1"><username>' + $("#usr").val() + '</username><password>' + $("#pwd").val() + '</password></n1:getLogin></soap:Body></soap:Envelope>';
+
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                if (xmlhttp.status == 200) {
+                    result = xmlhttp.responseXML.getElementsByTagName("return")[0].childNodes[0].nodeValue;
+                    if (result == "true")
+                    {
+
+                        setLastTime();
+                        skip();
+                    }
+                    else 
+                    {
+                        $("#login_result").html(err_msg_invalid);
+                    }
+                }
+            }
+        }
+        // Send the POST request
+        xmlhttp.setRequestHeader('Content-Type', 'text/xml;charset = utf-8');
+        xmlhttp.send(sr);   
+        console.log(sr);
+        
+    }
+
+    function skip() {
+        window.location = "loading.html";
+    }
+
+    function isRealValue(obj){
+        return obj && obj !== "null" && obj!== "undefined";
+    }
+
+    function getLastTime() {
+        return localStorage.getItem('from_time');
+    }
+
+    function setLastTime() {
+
+        var dt = new Date();
+        var now = dt.getTime();
+
+        localStorage.setItem('from_time', now);
+    }
+
+</script>
+    </body> 
+</html>
+
+

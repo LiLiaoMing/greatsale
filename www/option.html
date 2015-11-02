@@ -1,0 +1,158 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <!-- <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
+            <!-- <a style="display: inline;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a> -->
+            <a style="display: inline;" href="product_info.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a> -->
+            <!-- <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix">OPTION</span><br>
+                <span class="choose-title"></span>
+            </h3>
+            <div class="item-select">
+                <div class="option-info-div">
+                    
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var medias = [];   
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+
+            console.log("======================option.html==========================");
+
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            // Contents
+            $(".choose-title").html(localStorage.getItem("option_name"));
+            
+            var async_func_num;
+            var option = [];
+            var medias = [];
+            
+            get_option();
+            function get_option() {
+
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from options where id = " + localStorage.getItem('option_id') , [], function(tx, res) {
+                        option = res.rows.item(0);
+                        build_body();        
+                    });
+                
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function build_body() {
+                
+                url = localStorage.getItem('server_base_url') + option['image'];
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+
+                    $(".option-info-div").append('<img src="' + file_url + '" class="option-info-image"><div class="option-info-title">Advantage</div><div class="option-info-text">' + option['advantage'] + '</div><div class="option-info-title">Benefit</div><div class="option-info-text">' + option['benefit'] + '</div><div class="cf"></div><div class="option-info-media-title">Media</div>');
+                    get_media_ids();
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+
+            
+            /****************  media ******************/
+
+            var media_ids = [];
+            var ii = 0;
+
+            function get_media_ids() {
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from option_media where option_id = " + localStorage.getItem('option_id') , [], function(tx, res) {
+                        async_func_num = res.rows.length;
+                        
+                        for(i=0; i<res.rows.length; i++) {
+                            media_ids[i] = res.rows.item(i)['media_id'];
+                        }
+
+                        get_medias();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+                     
+            function get_medias() {
+                
+                async_func_num = media_ids.length;    
+                
+                db.transaction(function(tx) {
+                    for(i=0; i<media_ids.length; i++)
+                    {
+                        tx.executeSql("select * from media where id = " +  media_ids[i], [], function(tx, res) {
+                            
+                            medias.push(res.rows.item(0));
+                            async_func_num--;
+                        });
+                    }
+                    ii = 0;
+                    build_body_media();           
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            
+            function build_body_media() {
+                
+                if (async_func_num != 0 )
+                {
+                    t = setTimeout(function(){ build_body_media() }, 500);
+                    return;
+                }
+                console.log(medias.length);
+
+                if( ii < medias.length) {
+                    
+                    url = localStorage.getItem('server_base_url') + medias[ii]['thumbnail'];
+                    console.log(url);
+                                                
+                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        
+                        $('.option-info-div').append('<div class="option-media-item"><img src="' + file_url + '" class="option-media-image"><div class="option-media-title">' + medias[ii]['name'] + '</div><div class="option-media-text">' + medias[ii]['description'] + '</div></div>');
+
+                    }, function(error){
+                        console.log("Error : " + error);
+                    });
+                }
+            }
+        }
+        function setData(ii)
+        {
+            localStorage.setItem('product_type_id', table[ii]['id']);            
+            localStorage.setItem('product_type_name', table[ii]['name']);            
+        }
+         </script>
+    </body>
+</html>
+

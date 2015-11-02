@@ -1,0 +1,312 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <a style="display: inline;" href="application_detail.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+
+            <h3 style="float:left; margin-right:30px; margin-bottom:40px">
+                <span class="choose-prefix">PRODUCTS SELECTED FOR</span><br>
+                <span class="choose-title"></span>
+            </h3>
+            <div style="clear:both"></div>
+            <div class="item-select">
+
+            </div>
+        </div>
+        <!-- <div class="scroll-for-more"><a href="#form-info"><img src="img/overlay_scrollformore.png"></a></div> -->
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var table = [];
+        var options = localStorage_getItem('options');
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log("======================review.html==========================");
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            var products = localStorage_getItem('products');
+            var classes = ['landing-review', 'primary', 'secondary'];
+            
+            if (!isUndefined(products))
+            {  
+                $("#btn-review").show();
+            }
+
+            // Contents
+            $(".choose-title:eq(0)").html(localStorage.getItem("application_name"));
+
+            db.transaction(function(tx) {
+                
+                tx.executeSql("select * from applications where id = " + localStorage.getItem('application_id') , [], function(tx, res) {
+
+                    data = res.rows.item(0);
+                    
+                    url = localStorage.getItem('server_base_url') + data['main_image'];
+                                                
+                    //ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        
+                        //$('.item-select').append('<div class="main-image-div"><img style="width:100%" src="'+ file_url +'"/></div>');
+
+                        build_body();
+
+                    // }, function(error){
+                    //     console.log("Error : " + error);
+                    // });
+                });
+            
+            }, function(e) {
+              console.log("ERROR: " + e.message);
+            });
+
+            function build_body() {             
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from product_types ", [], function(tx, res) {
+                        
+                        var ii = 0;
+                        var products = localStorage_getItem('products');
+
+                        function build_body_content() {
+                            if( ii < res.rows.length) {
+                                data = res.rows.item(ii);
+                                table[ii] = data;
+
+                                var product;
+                                if (!isUndefined(products))
+                                {  
+                                    product = products[data['id']];
+                                }
+
+                                if( isUndefined(product))
+                                {
+                                    $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + 
+                                        '</div></div>');
+                                    ii++;
+                                    build_body_content();
+                                }
+                                else 
+                                {
+                                    
+                                    var options = localStorage_getItem('options');
+                                    var option_btn_html = "";
+                                    
+                                    if (!isUndefined(options) && !isUndefined(options[data['id']]))
+                                    {  
+                                        option_btn_html = '<img class="options-selected" src="img/overlay_optionsselected.png"><br>';
+                                    }
+
+                                    
+                                    url = localStorage.getItem('server_base_url') + product['image'];
+                                    
+                                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                            
+                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product" id="selected-product-' + data['id'] + '"><img src="'+ file_url +'" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br></div></div>' + option_btn_html + '</div></div>');
+
+                                        ii++;
+                                        build_body_content();
+
+                                    }, function(error){
+                                        console.log("Error : " + error);
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                ii = 0;
+                                build_body_option();
+                            }
+                        }
+                        build_body_content();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function build_body_option() 
+            {             
+                for (var product_type_id in options) 
+                {
+                    for (var option_id in options[product_type_id])
+                    {
+                        if (isUndefined(options[product_type_id][option_id]))
+                            continue;
+                        url = localStorage.getItem('server_base_url') + options[product_type_id][option_id]['image'];
+                        load_option_html(product_type_id, option_id, url);                        
+                    }
+                }
+                var t = setTimeout(function(){ build_form() }, 500);
+            }
+
+            function load_option_html(product_type_id, option_id, url) 
+            {
+
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    sub_html = "";
+                    if (!isUndefined(options[product_type_id][option_id][0]))
+                        sub_html = options[product_type_id][option_id][0]['name'];
+                    $("#selected-product-" + product_type_id).append('<div class="options_name_list"><img src="' + file_url + '" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + options[product_type_id][option_id]['name'] + '</div><div style="color : RGB(190, 190, 190);">' + sub_html + '</div></div><div class="cf"></div></div>');
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+
+
+            function build_form() {
+                
+                var saveData = {};
+                saveData.application = localStorage.getItem('application_id')
+                saveData.products = {};
+                var products = localStorage_getItem('products');
+                for (i in products) {
+                    if (isUndefined(products[i]))
+                        continue;
+                    
+                    var saveProduct = {};
+                    var selectedProduct  = products[i];
+                    saveProduct.id   = selectedProduct['id'];
+                    saveProduct.options  = {};
+
+                    var options = localStorage_getItem('options');
+                    if (!isUndefined(options) && !isUndefined(options[selectedProduct['product_type_id']]))
+                    {
+                        options = options[selectedProduct['product_type_id']];
+                        for (j in options) {
+                            if (isUndefined(options[j]))
+                                continue;
+                            var selectedOption = options[j];
+                            saveProduct.options[j] ='' +  selectedOption['id'];
+                        }
+                    }
+                    saveData.products[i] = saveProduct;
+                }
+
+                test_log(JSON.stringify(saveData));
+                $(".item-select").append('<div class="cf"></div><form class="form-info" id ="form-info" method="POST" ><div class="form-title-1">Customer</div><div class="form-title-2">Information</div><input placeholder="Name*" name="name" id="name" class="form-input"><input placeholder="Company" name="company" class="form-input"><div class="cf"></div><input placeholder="Email*" name="email" id="email" class="form-input"><input placeholder="Phone" name="phone" id="phone" class="form-input"><div class="cf"></div><input placeholder="Address 1" name="address1" class="form-input"><input placeholder="Address 2" name="address2" class="form-input"><div class="cf"></div><input placeholder="City" name="city" class="form-input"><input placeholder="State / Province" name="state" class="form-input"><div class="cf"></div><input placeholder="Zip / Postal Code" name="zip" id="zip" class="form-input"><input placeholder="Country" name="country" class="form-input"><div class="cf"></div><textarea placeholder="Notes" name="notes" class="form-text"></textarea><input value="' + JSON.stringify(saveData) + '" name="save_data" type="hidden"><div class="form-buttons"><span class="error"></span><img id="btn-save-and-email" src="img/button_saveandemail.png" class="form-button"  onclick="submitSave();"></div></form>');
+
+                $("body").append('<div class="scroll-for-more"><a href="#form-info"><img src="img/overlay_scrollformore.png"></a></div>');
+            }
+        }
+
+        function submitSave() {
+            if ( validateForm() )
+            {
+                if (!hostReachable()) {
+                    $(".error").html("No internet connection at the moment! Try it again later.");
+                }
+                else {
+                    var request = $.ajax({
+                        url: localStorage.getItem('server_base_url') +'/api/save',
+                        method: "POST",
+                        data: {
+                            name : $('input[name="name"]').val(),
+                            company : $('input[name="company"]').val(),
+                            email : $('input[name="email"]').val(),
+                            phone : $('input[name="phone"]').val(),
+                            address1 : $('input[name="address1"]').val(),
+                            address2 : $('input[name="address2"]').val(),
+                            city : $('input[name="city"]').val(),
+                            state : $('input[name="state"]').val(),
+                            zip : $('input[name="zip"]').val(),
+                            country : $('input[name="country"]').val(),
+                            notes : $('input[name="notes"]').val(),
+                            save_data : $('input[name="save_data"]').val()
+                        }
+                    });
+
+                    request.done(function(msg) {
+                        $("#content").html('<img src="img/button_sessionsaved.png" style="position:absolute;width:150px; left:440px; top:370px;">');
+                        $(".error").html("It is saved successfully.");
+                        test_log("done");
+                    });
+
+                    request.fail(function( jqXHR, textStatus ) {
+                        $(".error").html( "Unfortunately your request failed. Try it again later." );
+//                        $("#error").html( "Request failed: " + textStatus );
+                    });
+
+                    $(".error").html("Now saving....");
+
+
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        function validateForm(){
+
+            var nameReg = /^[A-Za-z ]+$/;
+            var numberReg =  /^[0-9]+$/;
+            var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+
+            var name = $('#name').val();
+            var email = $('#email').val();
+            var phone = $('#phone').val();
+            var zipcode = $('#zip').val();
+            
+            if(name == ""){
+                $(".error").html('Please enter your name.');
+                return false;
+            } 
+            else if(!nameReg.test(name)){
+                $(".error").html('Please enter your name correctly.');
+                return false;
+            }
+
+            if(email == ""){
+                $(".error").html('Please enter your email.');
+                return false;
+            }
+            else if(!emailReg.test(email)) {
+                $(".error").html('Please enter a valid email address.');
+                return false;
+            }
+
+            if((phone != "") && !numberReg.test(phone)){
+                $('#telephoneLabel').html('Numbers only.');
+                return false;
+            }
+
+            if((zipcode != "") && !numberReg.test(zipcode)){
+                $('#telephoneLabel').html('Numbers only.');
+                return false;
+            }
+
+            $(".error").html('');
+            return true;
+        }   
+
+                
+        function setData(ii)
+        {
+            localStorage.setItem('product_type_id', table[ii]['id']);            
+            localStorage.setItem('product_type_name', table[ii]['name']);            
+        }
+        function setData1(iid, nname)
+        {
+            localStorage.setItem('product_id', iid);
+            localStorage.setItem('product_name', nname);
+            localStorage.setItem('from_page', 'application_detail.html');
+        }
+         </script>
+    </body>
+</html>

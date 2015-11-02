@@ -1,0 +1,250 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a>
+            <a style="display: none;" href="review.html" class="btn" id="btn-review"><img src="img/button_review.png"></a>
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a>
+            <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix">APPLICATION</span><br>
+                <span class="choose-title"></span>
+            </h3>
+            <div class="item-select">
+                
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var table = [];
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log("======================application_detail.html==========================");
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            var products = localStorage_getItem('products');
+            
+            if (!isUndefined(products))
+            {  
+                $("#btn-review").show();
+            }
+
+            // Contents
+            $(".choose-title").html(localStorage.getItem("application_name"));
+
+            db.transaction(function(tx) {
+                
+                tx.executeSql("select * from applications where id = " + localStorage.getItem('application_id') , [], function(tx, res) {
+
+                    data = res.rows.item(0);
+                    
+                    url = localStorage.getItem('server_base_url') + data['main_image'];
+                                                
+                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        
+                        $('.item-select').append('<div class="main-image-div"><img class="main-application" style="width:100%" src="'+ file_url +'"/></div>');
+                        
+                        build_overlay_picture();
+
+                    }, function(error){
+                        console.log("Error : " + error);
+                    });
+                });
+            
+            }, function(e) {
+              console.log("ERROR: " + e.message);
+            });
+
+            function build_overlay_picture() {             
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from product_types ", [], function(tx, res) {
+                        
+                        var ii = 0;
+                        function build_overlay_picture_item() {
+                            if( ii < res.rows.length) {
+                                data = res.rows.item(ii);
+                                table[ii] = data;
+
+                                var products = localStorage_getItem('products');
+                                var product;
+
+                                if (!isUndefined(products))
+                                {
+                                    product = products[data['id']];
+                                }
+                                if( !isUndefined(product))
+                                {
+                                    db.transaction(function(tx) {
+                                        tx.executeSql("select * from product_images where product_id = " + product['id'] + " and application_id = " + localStorage.getItem('application_id'), [], function(tx, res1) {
+                                            product_image = res1.rows.item(0)['image'];
+                                            url = localStorage.getItem('server_base_url') + product_image;
+                                            ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                                                $('.main-image-div').append('<img src="' + file_url + '" class="overlay-image">');
+
+                                                ii++;
+                                                build_overlay_picture_item();
+
+                                            }, function(error){
+
+                                                console.log("Error : " + error);
+                                                ii++;
+                                                build_overlay_picture_item();
+                                            });
+                                        });
+                                    });
+                                }
+                                else
+                                {
+                                    ii++;
+                                    build_overlay_picture_item();       
+                                }
+                            }
+                            else
+                            {
+                                build_body_prepare();
+                            }
+                        }
+                        build_overlay_picture_item();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            var available_products_count=[];
+            var type_id = 1;
+
+            function build_body_prepare() {
+                if (type_id > 3)
+                    build_body();
+                else {
+
+                    db.transaction(function (tx) {
+                        tx.executeSql("select products.*, application_product.application_id from products left join application_product on products.id = application_product.product_id where application_id = " + localStorage.getItem('application_id') + " and product_type_id = " + type_id, [], function (tx, res) {
+
+                            available_products_count[type_id - 1] = res.rows.length;
+                            type_id++;
+                            build_body_prepare();
+                        });
+
+                    }, function (e) {
+                        console.log("ERROR: " + e.message);
+                    });
+                }
+            }
+            function build_body() {
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from product_types ", [], function(tx, res) {
+                        
+                        var classes = ['landing', 'primary', 'secondary'];
+
+                        var ii = 0;
+                        function build_body_content() {
+                            if( ii < res.rows.length) {
+                                data = res.rows.item(ii);
+                                table[ii] = data;
+
+                                //var products = localStorage_getItem('products');
+                                var product;
+
+                                if (!isUndefined(products))
+                                {  
+                                    product = products[data['id']];
+                                }
+                                if ((ii == 2) && !isUndefined(product) && (product['no_secondary_suspension'] == 1))
+                                {
+                                    test_log(product['no_secondary_suspension'] );
+                                    return;
+                                }
+
+                                if (available_products_count[ii] <= 0)
+                                {
+                                    ii++;
+                                    build_body_content();
+                                    return;
+                                }
+
+                                if( isUndefined(product))
+                                {
+                                    $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] +
+                                        '</div><a href="product.html" onclick="setData(' + ii + ');" class="option-link"><img class="option-btn" src="img/button_view.png"></a></div>');
+                                    ii++;
+                                    build_body_content();
+                                }
+                                else 
+                                {
+                                    var options = localStorage_getItem('options');
+                                    var option_btn_html = "";
+                                    
+                                    if (!isUndefined(options) && !isUndefined(options[data['id']]))
+                                    {  
+                                        option_btn_html = '<img class="options-selected" src="img/overlay_optionsselected.png"><br><div class="options_name_list">';
+                                        options[data['id']].forEach(function(item) {
+                                            if (item != null) {
+                                                option_btn_html = option_btn_html + item['name'] + '<br/>';
+                                            }
+                                        });
+                                        option_btn_html = option_btn_html + "</div>"
+                                    }
+
+                                    url = localStorage.getItem('server_base_url') + product['image'];
+                                    
+                                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+
+                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product"><img src="'+ file_url +'" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br>' + option_btn_html + '</div></div><div class="selected-product-buttons"><a href="product.html" class="option-link" onclick="setData(' + ii + ');"><img src="img/button_change.png" class="selected-product-change"></a><a href="product_info.html" onclick="setData1(' + ii + ', ' + product['id'] + ', \'' + product['name'] + '\');"><img src="img/button_infoandoptions.png" class="selected-product-options"></a></div></div></div>');
+
+                                        if ((ii == 1) && (product['no_secondary_suspension'] == 1))
+                                            return;
+                                        ii++;
+                                        build_body_content();
+
+                                    }, function(error){
+                                        console.log("Error : " + error);
+                                    });
+                                }
+                            }
+                        }
+                        build_body_content();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }       
+        }
+        
+        function setData(ii)
+        {
+            localStorage.setItem('product_type_id', table[ii]['id']);            
+            localStorage.setItem('product_type_name', table[ii]['name']);
+            localStorage.setItem('product_type_note', table[ii]['note']);
+        }
+        function setData1(ii, iid, nname)
+        {
+            setData(ii);
+            localStorage.setItem('product_id', iid);
+            localStorage.setItem('product_name', nname);
+            localStorage.setItem('from_page', 'application_detail.html');
+        }
+         </script>
+    </body>
+</html>

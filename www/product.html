@@ -1,0 +1,125 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <!-- <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a> -->
+            <a style="display: inline;" href="application_detail.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <a style="display: inline;" href="application_detail.html" class="btn" id="btn-noneskip" onclick="noneSkip()"><img src="img/button_noneskip.png"></a>
+            <!--<img src="img/button_noneskip.png" onclick="noneSkip()">-->
+            <!-- <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix">Choose</span>
+                <span class="product-note"></span>
+                <br>
+                <span class="choose-title"></span>
+
+            </h3>
+            <div class="item-select">
+                <!-- <div class="product"><img src="media/product_atlas55_main.png" class="product-image"><div class="product-info"><div class="product-title">Atlas 55</div><div class="product-text">The benchmark for lifting performance.<br>Lift Capacity: 55,000 lbs<br>Load Capacity: 170,000 lbs<br></div></div><div class="product-buttons"><img src="/img/button_select.png" class="product-select"><img src="/img/button_infoandoptions.png" class="product-options"></div></div> -->
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var table = [];
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log("======================product.html==========================");
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            // Contents
+            $(".choose-title").html(localStorage.getItem("product_type_name"));
+            $(".product-note").html(localStorage.getItem("product_type_note"));
+            
+            db.transaction(function(tx) {
+                tx.executeSql("select products.*, application_product.application_id from products left join application_product on products.id = application_product.product_id where application_id = " + localStorage.getItem('application_id') + " and product_type_id = " + localStorage.getItem('product_type_id') + " order by ranking" , [], function(tx, res) {
+                    
+                    var ii = 0;
+                    function build_body() {
+                        
+                        if( ii < res.rows.length) {
+                            data = res.rows.item(ii);
+                            table[ii] = data;
+                            
+                            url = localStorage.getItem('server_base_url') + data['image'];
+                                                        
+                            ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                                
+                                $('.item-select').append('<div class="product"><img src="' + file_url + '" class="product-image"><div class="product-info"><div class="product-title">' + data['name'] + '</div><div class="product-text">' + data['preview_capacity_info_1'] + '<br>' + data['preview_capacity_info_2'] + '<br>' + data['preview_capacity_info_3'] +'<br></div></div><div class="product-buttons"><a href="product_info.html" onclick="setData(' + ii + ');"><img src="img/button_select.png" class="product-select"></a><a href="product_info.html" onclick="setData1(' + ii + ');"><img src="img/button_infoandoptions.png" class="product-options"></a></div></div>');
+                                ii++;
+                                build_body();
+
+                            }, function(error){
+                                console.log("Error : " + error);
+                            });
+                        }
+                    }
+
+                    build_body();
+                });
+                    
+            }, function(e) {
+              console.log("ERROR: " + e.message);
+            });
+
+        }
+        
+        function setData(ii)
+        {
+            setData1(ii);
+            var products = localStorage_getItem('products');
+            if (isUndefined(products))
+                products = [];
+
+            products[localStorage.getItem("product_type_id")] = table[ii];
+            localStorage_setItem('products', products);
+            localStorage.setItem('selected_product', true);
+            localStorage.setItem('selected_product_new', true);
+        }
+
+        function setData1(ii)
+        {
+            localStorage.setItem('product_id', table[ii]['id']);
+            localStorage.setItem('product_name', table[ii]['name']);
+            localStorage.setItem('from_page', 'product.html');
+        }
+
+        function noneSkip() {
+            var products = localStorage_getItem('products');
+            if (isUndefined(products))
+                return;
+
+            if (!isUndefined(products[localStorage.getItem("product_type_id")])) {
+                delete products[localStorage.getItem("product_type_id")];
+                localStorage_setItem('products', products);
+            }
+
+            var app_options = localStorage_getItem('options');
+
+            if (!isUndefined(app_options) && !isUndefined(app_options[localStorage.getItem("product_type_id")])) {
+                delete app_options[localStorage.getItem("product_type_id")];
+                localStorage_setItem('options', app_options);
+            }
+        }
+         </script>
+    </body>
+</html>

@@ -1,0 +1,29 @@
+Node version: v0.12.0
+
+Cordova version: 4.3.0
+
+Config.xml file: 
+
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.great.dane" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>GreatDane</name>
+    <description>
+        A sample Apache Cordova application that responds to the deviceready event.
+    </description>
+    <author email="dev@cordova.apache.org" href="http://cordova.io">
+        Apache Cordova Team
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+</widget>
+
+
+Plugins: 
+
+com.brodysoft.sqlitePlugin,org.apache.cordova.device,org.apache.cordova.file,org.apache.cordova.file-transfer
+
+iOS platform:
+
+Xcode 6.1
+Build version 6A1042b
+

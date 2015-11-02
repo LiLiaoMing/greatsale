@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-startover"><img src="img/button_startover.png"></a>
+            <a style="display: none;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a>
+            <a style="display: none;" href="#" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a>
+            <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix">Choose</span><br>
+                <span class="choose-title">Product Range</span>
+            </h3>
+            <div class="item-select">
+                
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var table = [];
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+
+        function onDeviceReady() {
+            
+            console.log("======================range.html=====  =====================");
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            // Contents
+                        
+            db.transaction(function(tx) {
+                
+                tx.executeSql("select * from ranges where active=1", [], function(tx, res) {
+                    
+                    var ii = 0;
+                    function build_body() {
+                        
+                        if( ii < res.rows.length) {
+                            data = res.rows.item(ii);
+                            table[ii] = data;
+                            
+                            url = localStorage.getItem('server_base_url') + data['image'];
+                                                        
+                            ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                                
+                                $('.item-select').append('<a class="range" href="application.html" onclick="setData(' + ii + ');"><img src="'+ file_url +'"/></a>');
+                                ii++;
+                                build_body();
+
+                            }, function(error){
+                                console.log("Error : " + error);
+                            });
+                        }
+                    }
+
+                    build_body();
+                });
+                    
+            }, function(e) {
+              console.log("ERROR: " + e.message);
+            });
+
+        }
+        
+        function setData(ii)
+        {
+            localStorage.setItem('range_id', table[ii]['id']);            
+            localStorage.setItem('range_name', table[ii]['name']);
+        }
+         </script>
+    </body>
+</html>

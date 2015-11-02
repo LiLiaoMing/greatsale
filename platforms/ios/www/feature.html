@@ -1,0 +1,309 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <!-- <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
+            <!-- <a style="display: inline;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a> -->
+            <a style="display: inline;" href="product_info.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <a style="display: none;" href="product_info.html" class="btn" id="btn-add-option" onclick="addOption();"><img src="img/button_addoption_header.png"></a>
+            <a style="display: none;" href="product_info.html" class="btn" id="btn-remove" onclick="removeOption();"><img src="img/button_remove.png"></a>
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a> -->
+            <!-- <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix"></span><br>
+                <span class="choose-title"></span>
+            </h3>
+            <div class="item-select">
+                <div class="option-info-div">
+                    
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var medias = [];   
+        var feature = [];
+        var sub_options = [];
+
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+            console.log("======================feature.html==========================");
+            console.log("type : " + localStorage.getItem('feature_type'));
+            console.log("id : " + localStorage.getItem('feature_id'));
+            console.log("name : " + localStorage.getItem('feature_name'));
+            // Initialize
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            var feature_table;
+            var feature_media_table;
+            var feature_id_field;
+            // Contents
+            if( localStorage.getItem("feature_type") == "feature")
+            {
+                $(".choose-prefix").html("KEY FEATURE");
+                feature_table="features";
+                feature_media_table="feature_media";
+                feature_id_field="feature_id";
+
+            }
+            else
+            {
+                var options = localStorage_getItem('option');
+                var cur_product;
+
+                if (!isUndefined(options) && !isUndefined(options[localStorage.getItem("product_type_id")]) && !isUndefined(options[localStorage.getItem("product_type_id")][localStorage.getItem("feature_id")]))
+                    $("#btn-remove").show();
+                else
+                    $("#btn-add-option").show();
+                
+                $(".choose-prefix").html("OPTION");
+                feature_table="options";
+                feature_media_table="option_media";
+                feature_id_field="option_id";
+            }
+
+            $(".choose-title").html(localStorage.getItem("feature_name"));
+            
+            
+
+            var async_func_num;
+            
+            get_feature();
+            function get_feature() {
+
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from " + feature_table + " where id = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                        feature = res.rows.item(0);
+                        build_body();        
+                    });
+                
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function build_body() {
+                
+                url = localStorage.getItem('server_base_url') + feature['image'];
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+
+                    $(".option-info-div").append('<img src="' + file_url + '" class="option-info-image"><div class="option-info-title">Advantage</div><div class="option-info-text">' + feature['advantage'] + '</div><div class="option-info-title">Benefit</div><div class="option-info-text">' + feature['benefit'] + '</div><div class="cf"></div>');
+                    get_sub_option_ids();
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+
+            /****************  sub_options ******************/
+
+
+            var ii = 0;
+
+            function get_sub_option_ids() {
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from sub_options where option_id = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                        for(i=0; i<res.rows.length; i++) {
+                            sub_options[i] = res.rows.item(i);
+                        }
+                        if (res.rows.length > 0 ) {
+                            $("#btn-add-option").hide();
+                            $(".option-info-div").append('<div class="option-info-media-title">SIZE & VARIATIONS</div>');
+                        }
+                        ii = 0;
+                        build_body_sub_options();
+                    });
+                }, function(e) {
+                    console.log("ERROR: " + e.message);
+                });
+            }
+
+            function build_body_sub_options() {
+
+                if( ii < sub_options.length) {
+
+                    $('.option-info-div').append('<div class="option-media-item"><img src="img/button_addoption_main.png" class="product-option-info-btn" onclick="addOptionWithSub(' + ii + ');"><div class="option-media-title">' + sub_options[ii]['name'] + '</div><div class="option-media-text">' + sub_options[ii]['description'] + '</div><div class="option-media-text">' + sub_options[ii]['size'] + '</div></div>');
+                    ii++;
+                    build_body_sub_options();
+                }
+                else
+                {
+                    get_media_ids();
+                }
+
+            }
+
+
+            
+            /****************  media ******************/
+
+            var media_ids = [];
+            ii = 0;
+
+            function get_media_ids() {
+
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from " + feature_media_table + " where " + feature_id_field + " = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                        async_func_num = res.rows.length;
+                        
+                        for(i=0; i<res.rows.length; i++) {
+                            media_ids[i] = res.rows.item(i)['media_id'];
+                        }
+                        $(".option-info-div").append('<div class="option-info-media-title">Media</div>');
+                        get_medias();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function get_medias() {
+
+                async_func_num = media_ids.length;
+
+                db.transaction(function(tx) {
+                    for(i=0; i<media_ids.length; i++)
+                    {
+                        tx.executeSql("select * from media where id = " +  media_ids[i], [], function(tx, res) {
+
+                            medias.push(res.rows.item(0));
+                            async_func_num--;
+                        });
+                    }
+                    ii = 0;
+                    build_body_media();
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            
+            function build_body_media() {
+                
+                if (async_func_num != 0 )
+                {
+                    t = setTimeout(function(){ build_body_media() }, 500);
+                    return;
+                }
+
+                if( ii < medias.length) {
+                    
+                    url = localStorage.getItem('server_base_url') + medias[ii]['thumbnail'];
+                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        
+                        $('.option-info-div').append('<div class="option-media-item"><img src="' + file_url + '" class="option-media-image"  onclick="showMedia(' + ii + ');"><div class="option-media-title">' + medias[ii]['name'] + '</div><div class="option-media-text">' + medias[ii]['description'] + '</div></div>');
+                        ii++;
+                        build_body_media();
+                    }, function(error){
+                        console.log("Error : " + error);
+                    });
+                }
+            }
+        }
+        
+        function showMedia(ii)
+        {
+            var media = medias[ii];
+            if (media['media_type'] == 'image')
+            {
+                url = localStorage.getItem('server_base_url') + media['image'];
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    
+                    $('.media-background').show();
+                    $('#media-item-image').attr('src', file_url).load(function() {
+                        // wid = (1024 - parseInt($(this).width()))/2;
+                        // hei = (768 - parseInt($(this).height()))/2;
+                        // $(this).css('left', wid  + "px");
+                        // $(this).css('top', hei + "px");
+                    });
+                    $('#media-item-image').show();
+                    
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+            else
+            {
+                url = localStorage.getItem('server_base_url') + media['video_file'];
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    
+                    $('.media-background').show();
+                    $('#media-item-video').attr('src', file_url);
+                    // wid = (1024 - 560)/2;
+                    // hei = (768 - 315)/2;
+                    // $('#media-item-video').css('left', wid  + "px");
+                    // $('#media-item-video').css('top', hei + "px");
+                    $('#media-item-video').show();
+                    
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+        }
+        function hideMedia()
+        {
+            $('.media-background').hide();
+            $('#media-item-image').hide();
+            $('#media-item-video').hide();
+//            $('#media-item-video').attr('src', $('#media-item-video').attr('src'));
+            $('#media-item-video').contents().find('video').each(function() {
+                this.currentTime = 0;
+                this.pause();
+            })
+        }
+
+        function addOption()
+        {
+            var products = localStorage_getItem('products');
+            if (isUndefined(products) || isUndefined(products[localStorage.getItem("product_type_id")]))
+                return;
+
+            var app_options = localStorage_getItem('options');
+            if (isUndefined(app_options))
+                app_options = [];
+
+            if (isUndefined(app_options[localStorage.getItem("product_type_id")]))
+                app_options[localStorage.getItem("product_type_id")] = [];
+
+            app_options[localStorage.getItem("product_type_id")][feature['id']] = feature;
+            localStorage_setItem('options', app_options);
+            localStorage.setItem('selected_product', true);
+        }
+
+        function addOptionWithSub(ii) {
+            addOption();
+            app_options = localStorage_getItem('options');
+            app_options[localStorage.getItem("product_type_id")][feature['id']][0] = sub_options[ii];
+            localStorage_setItem('options', app_options);
+            window.location = "product_info.html";
+        }
+
+        function removeOption() 
+        {
+            var app_options = localStorage_getItem('options');
+            
+            delete app_options[localStorage.getItem("product_type_id")][feature['id']];
+            localStorage_setItem('options', app_options);
+        }
+        </script>
+        <div class="media-background" style="display:none" onclick="hideMedia();"></div>
+        <img  width="1000" height="580" class="media-item" style="display:none" id="media-item-image"/>
+        <iframe width="1000" height="580" frameborder="0" allowfullscreen class="media-item" id="media-item-video" style="display:none;"></iframe>
+    </body>
+</html>

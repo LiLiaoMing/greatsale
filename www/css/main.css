@@ -1,0 +1,438 @@
+body {
+    font-family: Arial, Sans-serif;
+    margin: 0;
+    padding: 0;
+}
+a {
+    cursor: pointer;
+}
+#top {
+    background: RGB(109, 109, 109);
+    color: #FFF;
+}
+#top #logo {
+    width: 242px;
+    margin: 15px;
+    float: left;        
+}
+#top .btn {
+    float: right;
+    margin: 12px 12px 6px 2px;
+}
+#top .btn img {
+    width: 160px;
+}
+
+#btn-noneskip, #btn-close, #btn-addoption, #btn-startover, #btn-review {
+    display: none;
+}
+#top h1 {
+    float: left;
+    font-size: 36px;
+    margin:14px 0 0 0;
+}
+.cf {
+    clear: both;
+}
+#content {
+    padding: 15px;
+    margin-bottom: 50px;
+}
+#content h3 {
+    font-size: 17px;
+    margin: 0 0 15px 0;
+    color: RGB(109, 109, 109);
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: lighter;
+
+}
+#content h3 .choose-title {
+    font-size: 20px;
+    color: RGB(255, 191, 42);
+    font-weight: bold;
+    display: block;
+    margin-top: 4px;
+}
+#content h3 .product-note {
+    font-size: 15px;
+    font-weight: bold;
+    font-style: italic;
+    display: block;
+    margin-top: 4px;
+    float:right;
+}
+#content h3 .choose-error {
+    font-size: 20px;
+    color: RGB(240, 30, 30);
+    font-weight: bold;
+    display: block;
+    margin-top: 4px;
+}
+.item-select a img {
+    width: 48%;
+    margin: 0 10px 10px 0;
+}
+.item-select .product {
+    width: 48%;
+    margin: 0 1% 1% 0;
+    padding-bottom: 50px;
+    border: solid 1px RGB(255, 191, 42);
+    min-height: 100px;
+    position: relative;
+    float: left;
+}
+.item-select .product .product-image {
+    width: 40%;
+    margin: 2%;
+    float: left;
+}
+.item-select .product .product-info {
+    width: 50%;
+    margin: 2%;
+    float: left;
+}
+.item-select .product .product-info .product-title {
+    color: RGB(255, 191, 42);
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+.item-select .product .product-info .product-text {
+    color: #BBB;
+}
+.item-select .product .product-buttons {
+    width: 100%;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+}
+.item-select .product .product-buttons .product-select {
+    width: 30%;
+    float: right;
+    margin: 1px;
+    cursor: pointer;
+}
+.item-select .product .product-buttons .product-options {
+    width: 42%;
+    float: right;
+    margin: 1px 5px 1px 1px;
+    cursor: pointer;
+}
+.item-select .product .product-image {
+    width: 40%;
+    margin: 2%;
+    float: left;
+}
+.selected-product .selected-product-image {
+    width: 20%;
+    margin: 2% 2% 2% 0;
+    float: left;
+}
+.selected-product .selected-product-info {
+    width: 78%;
+    margin-top: 5px;
+    float: left;
+}
+.selected-product .selected-product-title {
+    color: RGB(255, 191, 42);
+    font-size: 15px;
+    font-weight: bold;
+}
+.selected-product .selected-product-text {
+    color: #BBB;
+    font-size: 14px;
+}
+.selected-product-buttons {
+    padding-top: 10px;
+    width: 100%;
+    clear: both;
+}
+.selected-product-buttons a .selected-product-change {
+    margin-right: 10px;
+    height: 40px;
+    width: auto !important;
+    cursor: pointer;
+}
+.selected-product-buttons .selected-product-options {
+    height: 40px;
+    width: auto !important;
+    cursor: pointer;
+}
+.main-image-div {
+    width: 100%;
+    height: 340px;
+    margin-left: 0;
+    position: relative;
+}
+.main-application {
+    width: 100%;
+}
+.overlay-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+}
+.landing {
+    width: 40%;
+    margin-left: 10%;
+    float: left;
+    margin-bottom: 200px;
+}
+.landing-review {
+    width: 40%;
+    /*margin-left: 10%;*/
+    float: left;
+    margin-bottom: 200px;
+}
+.primary {
+    width: 40%;
+    margin-right: 10%;
+    float: right;
+    margin-bottom: 30px;
+}
+.secondary {
+    width: 40%;
+    margin-right: 10%;
+    float: right;
+}
+.option-title {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #BBB;
+    width: 100%;
+    font-size: 24px;
+}
+.item-select a img.option-btn {
+    width: 137.5px;
+    /*height:40px;*/
+}
+.product-top-div, .product-bottom-div {
+    width: 100%;
+}
+.product-info-image {
+    width: 100%;
+}
+.product-info-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: RGB(255, 191, 42);
+    margin-bottom: 15px;
+}
+.product-info-text {
+    font-size: 18px;
+    color: #333;
+}
+.product-info-div {
+    width: 49%;
+    margin-right: 1%;
+    float: left;
+}
+.product-image-zoom {
+    width:202.5px;
+    margin-bottom:15px;
+}
+.product-section-title {
+    text-transform: uppercase;
+    width: 100%;
+    border-bottom: solid 1px RGB(255, 191, 42);
+    color: RGB(255, 191, 42);
+    font-size: 18px;
+}
+.clear {
+    clear: both;
+}
+.product-option-div {
+    margin-top: 8px;
+}
+.product-option-image {
+    width: 30%;
+    float: left;
+}
+.product-option-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #444;
+    width: 68%;
+    margin-left: 2%;
+    margin-bottom: 15px;
+    float: right;
+}
+.product-option-buttons {
+    width: 68%;
+    margin-left: 2%;
+    float: right;
+}
+.product-option-info-btn {
+    margin-right: 20px;
+    width: 120px !important;
+    cursor: pointer;
+}
+
+.options-selected {
+    clear:both;
+    margin-top:5px;
+    margin-bottom:3px;
+    width: 160px;
+}
+.option-info-image {
+    width: 50%;
+    float: left;
+    margin-right: 4%;
+}
+.option-info-title {
+    width: 46%;
+    float: right;
+    text-transform: uppercase;
+    color: RGB(255, 191, 42);
+    font-size: 18px;
+}
+.option-info-text {
+    width: 46%;
+    float: right;
+    font-size: 17px;
+    color: #444;
+    margin-bottom: 15px;
+}
+.option-info-media-title {
+    width: 100%;
+    border-bottom: solid 1px RGB(255, 191, 42);
+    text-transform: uppercase;
+    color: RGB(255, 191, 42);
+    font-size: 18px;
+    margin-top: 20px;
+}
+.form-info {
+    margin-top: 20px;
+    margin-left: 25px;
+
+}
+.form-info .form-title-1 {
+    font-size: 17px;
+    color: RGB(109, 109, 109);
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: lighter;
+    width: 100%;
+}
+.form-info .form-title-2 {
+    font-size: 20px;
+    color: RGB(255, 191, 42);
+    font-weight: bold;
+    display: block;
+    text-transform: uppercase;
+    margin: 4px 0 30px;
+    width: 100%;
+}
+.form-info .form-input {
+    width: 450px;
+    font-size: 20px;
+    padding: 4px;
+    margin: 0 30px 20px 0;
+    background: #EEE;
+    color: #444;
+    border: none;
+    -webkit-appearance: none;-moz-appearance: none;appearance: none;
+}
+.form-info .form-text {
+    width: 930px;
+    font-size: 16px;
+    height: 45px;
+    margin: 0 0 30px;
+    background: #EEE;
+    color: #444;
+    border: none;
+    -webkit-appearance: none;-moz-appearance: none;appearance: none;
+}
+.form-info .form-buttons {
+    width: 930px;
+    text-align: right;
+}
+.form-info .form-buttons img {
+    height: 45px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+.product-brand-image {
+    height: 40px;
+    float: left;
+    margin: 3px 10px 0 0;
+}
+.option-media-item {
+    width: 50%;
+    float: left;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.option-media-image {
+    width: 38%;
+    margin-right: 2%;
+    float: left;
+}
+.option-media-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #999;
+    margin-bottom: 15px;
+    width: 55%;
+    margin-right: 5%;
+    float: right;
+}
+.option-media-text {
+    color: #999;
+    font-size: 18px;
+    width: 55%;
+    margin-right: 5%;
+    float: right;
+}
+.media-background {
+    position: fixed;
+    background: #000;
+    opacity: .4;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+}
+.media-item {
+    position: fixed;
+    z-index: 10;
+    top: 94px;
+    left: 12px;
+    /*max-width: 80%;
+    max-height: 80%;*/
+
+}
+.scroll-for-more
+{
+    position: fixed;
+    z-index: 100;
+    bottom: 0;
+    left: 0;
+}
+.scroll-for-more a img {
+    width:100%;
+}
+.error {
+    float: left;
+    color: #f00;
+}
+.product-note {
+    float:right;
+
+}
+.options_name_list {
+    width:90%;
+    border-top : solid 1px RGB(190, 190, 190);
+    color : RGB(255, 180, 0);
+    text-transform: uppercase;
+}
+.ddd{
+    border-top : solid 1px RGB(190, 190, 190) !important;
+}

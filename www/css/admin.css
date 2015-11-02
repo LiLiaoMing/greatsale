@@ -1,0 +1,13 @@
+.container-fluid {
+    min-height: 500px;
+}
+table.option-selection {
+    width: 500px;
+}
+table.option-selection td select {
+    width: 200px;
+    height: 200px;
+}
+table.option-selection td button {
+    margin: 0 20px;
+}

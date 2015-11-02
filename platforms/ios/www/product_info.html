@@ -1,0 +1,431 @@
+<html><head>
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+    </head>
+    <body>
+        <div id="top">
+            <a href="/">
+                <img id="logo" src="img/logo_safholland.png">
+            </a>
+            <h1>Product Selector</h1>
+            <!-- <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
+            <!-- <a style="display: inline;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a> -->
+            <a style="display: inline;" href="application_detail.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
+            <a style="display: none;" href="product_info.html" class="btn" id="btn-select" onclick="selectProduct();"><img src="img/button_select_header.png"></a>
+            <a style="display: none;" href="" class="btn" id="btn-remove" onclick="removeProduct();"><img src="img/button_remove.png"></a>
+            <!-- <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a> -->
+            <!-- <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <div class="cf"></div>
+            <img id="btn-optionadded" src="img/overlay_optionadded.png" style="display:none;position:absolute;width:100%; left:0px; top:0px;">
+            <img id="btn-productadded" src="img/overlay_productselected.png" style="display:none;position:absolute;width:100%; left:0px; top:0px;">
+        </div>
+        <div id="content">
+            <h3>
+                <span class="choose-prefix">INFO & OPTIONS</span><br>
+                <span class="choose-title"></span>
+            </h3>
+            <div class="item-select">
+                <div class="product-top-div"></div>
+                <div class="clear"></div>
+                <div class="product-bottom-div"></div>
+                    <div id="product-info-feature-div" class="product-info-div">
+                        <div class="product-section-title">Key Features</div>
+                        <div class="product-info-features"></div>
+                    </div>
+                    <div id="product-info-option-div" class="product-info-div">
+                        <div class="product-section-title">Options</div>
+                        <div class="product-info-options"></div>
+                    </div>
+                </div>
+                <div class="cf"></div>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/imgcache.js"></script>
+        <script type="text/javascript" src="js/qimgcache.js"></script>
+        
+        <script type="text/javascript">
+        
+        var table = [];
+        var features = [];  
+        var options = [];            
+        var product = [];
+        document.addEventListener('deviceready', onDeviceReady, false);
+
+        function onDeviceReady() {
+
+            console.log("======================product_info.html==========================");
+            // Initialize
+
+            test_log(localStorage.getItem('selected_product'));
+            initImgCache();
+            db_name = localStorage.getItem('db_name');
+            db = window.sqlitePlugin.openDatabase({name: db_name});
+
+            // Contents
+            $(".choose-title").html(localStorage.getItem("product_name"));
+            //$("#btn-close").attr("href", localStorage.getItem("from_page"));
+            //$("#btn-select").attr("href", localStorage.getItem("from_page"));
+            $("#btn-remove").attr("href", localStorage.getItem("from_page"));
+
+            var async_func_num;
+            var brand = [];
+            var main_url = "";
+            var brand_url = "";
+
+            var products = localStorage_getItem('products');
+            var cur_product;
+
+            if (!isUndefined(products))
+            {  
+                cur_product = products[localStorage.getItem("product_type_id")];
+            }
+
+            if( !isUndefined(cur_product) && (cur_product['id'] == localStorage.getItem('product_id')))
+                $("#btn-remove").show();
+            else
+                $("#btn-select").show();
+
+            if (!isUndefined(localStorage.getItem('selected_product')))
+            {
+                test_log("startAnim");
+                startAnim();
+                localStorage.removeItem('selected_product');
+            }
+//
+            get_product();
+            function get_product() {
+
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from products where id = " + localStorage.getItem('product_id') , [], function(tx, res) {
+                        product = res.rows.item(0);
+                        get_brand();        
+                    });
+                
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function get_brand() {
+
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from product_brands where id = " + product['product_brand_id'] , [], function(tx, res) {
+                        brand = res.rows.item(0);
+                        loading_main_image();
+                    });
+                
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function loading_main_image() {
+                url = localStorage.getItem('server_base_url') + product['image'];
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    main_url = file_url;
+                    loading_brand_image();
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+
+            function loading_brand_image() {
+
+                url = localStorage.getItem('server_base_url') + brand['image'];
+                                                
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    brand_url = file_url;
+                    build_body();
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
+
+            function build_body() {
+                console.log("main_url " + main_url);
+                $('.product-top-div').append('<div class="product-info-div"><a href="model.html"><img style="width:100%;" src="' + main_url + '" class="product-info-image"></a><img src="img/overlay_tapimagetozoom.png" class="product-image-zoom"></div><div class="product-info-div"><img src="' + brand_url + '" class="product-brand-image"><div class="product-info-title">' + product['name'] + '</div><div class="product-info-text"><strong>' + product['preview_description'] + '</strong><br><br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br>'+ product['preview_capacity_info_3'] + '<br>' + product['extended_capacity_info_1'] + '<br>' + product['extended_capacity_info_2'] + '<br></div></div>');
+
+                get_feature_ids();    
+            }
+
+            /****************  features ******************/
+
+            var feature_ids = [];
+            var ii = 0;
+
+            function get_feature_ids() {
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from feature_product where product_id = " + localStorage.getItem('product_id') , [], function(tx, res) {
+                        async_func_num = res.rows.length;
+                        for(i=0; i<res.rows.length; i++) {
+                            feature_ids[i] = res.rows.item(i)['feature_id'];
+                        }
+                        get_features();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+                     
+            function get_features() {
+                
+                async_func_num = feature_ids.length;    
+                
+                db.transaction(function(tx) {
+                    for(i=0; i<feature_ids.length; i++)
+                    {
+                        tx.executeSql("select * from features where id = " +  feature_ids[i], [], function(tx, res) {
+                 
+                            features.push(res.rows.item(0));
+                            async_func_num--;
+                        });
+                    }
+                    ii = 0;
+                    build_body_feature();           
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            
+            function build_body_feature() {
+                
+                if (async_func_num != 0 )
+                {
+                    t = setTimeout(function(){ build_body_feature() }, 500);
+                    return;
+                }
+
+                if( ii < features.length) {
+                                        
+                    url = localStorage.getItem('server_base_url') + features[ii]['image'];
+                                                
+                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        
+                        $('#product-info-feature-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image"><div class="product-option-title">' + features[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setFeatureData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a></div><div class="cf"></div></div>');
+                        ii++;
+                        build_body_feature();
+
+                    }, function(error){
+                        console.log("Error : " + error);
+                    });
+                }
+                else
+                {   
+                    get_option_ids();
+                }
+            }
+
+
+            /****************  options ******************/
+            
+            var option_ids = [];
+            
+            function get_option_ids() {
+                db.transaction(function(tx) {
+                    tx.executeSql("select * from option_product where product_id = " + localStorage.getItem('product_id') , [], function(tx, res){
+                        async_func_num = res.rows.length;
+                        for(i=0; i<res.rows.length; i++) {
+                            option_ids[i] = res.rows.item(i)['option_id'];
+                        }
+                        get_options();
+                    });
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+            function get_options() {
+                
+                async_func_num = option_ids.length;    
+                
+                db.transaction(function(tx) {
+                    for(i=0; i<option_ids.length; i++)
+                    {
+                        tx.executeSql("select * from options where id = " +  option_ids[i], [], function(tx, res) {
+                 
+                            options.push(res.rows.item(0));
+                            async_func_num--;
+                        });
+                    }
+
+                    ii = 0;
+                    build_body_option();
+                }, function(e) {
+                  console.log("ERROR: " + e.message);
+                });
+            }
+
+
+            function build_body_option() {
+                
+                if (async_func_num != 0 )
+                {
+                    t = setTimeout(function(){ build_body_option() }, 500);
+                    return;
+                }
+
+                if( ii < options.length) {
+                                        
+                    url = localStorage.getItem('server_base_url') + options[ii]['image'];
+                                                
+                    ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                        db.transaction(function(tx) {
+                            tx.executeSql("select * from sub_options where option_id = " +  options[ii]['id'], [], function(tx, res) {
+                                option_html = "";
+                                if (isSelectedProduct())
+                                    option_html = '<a href="" onclick="addOption(' + ii + ');"><img src="img/button_addoption_main.png" class="product-option-info-btn"></a>';
+
+                                if (res.rows.length > 0)
+                                    option_html = "";
+
+                                if (isAddedOption(options[ii]['id'])) {
+                                    option_html = '<a href="" onclick="removeOption(' + ii + ');"><img src="img/button_removeoption_amber.png" class="product-option-info-btn"></a>';
+//                                    option_html = '<img src="img/button_removeoption_amber.png" class="product-option-info-btn" onclick="removeOption(' + ii + ');">';
+                                }
+
+                                $('#product-info-option-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image"><div class="product-option-title">' + options[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setOptionData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a>' + option_html + '</div><div class="cf"></div></div>');
+                                ii++;
+                                build_body_option();
+                            });
+                        }, function(e) {
+                            console.log("ERROR: " + e.message);
+                        });
+                    }, function(error){
+                        console.log("Error : " + error);
+                    });
+                }
+            }
+
+        }
+        
+        function setFeatureData(ii)
+        {
+            localStorage.setItem('feature_type', 'feature');
+            localStorage.setItem('feature_id', features[ii]['id']);            
+            localStorage.setItem('feature_name', features[ii]['name']);            
+        }
+        function setOptionData(ii)
+        {
+            localStorage.setItem('feature_type', 'option');
+            localStorage.setItem('feature_id', options[ii]['id']);            
+            localStorage.setItem('feature_name', options[ii]['name']);            
+        }
+
+        function isSelectedProduct() {
+
+            var products = localStorage_getItem('products');
+            if (isUndefined(products)) {
+                return false;
+            }
+            if (isUndefined(products[localStorage.getItem("product_type_id")])) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function isAddedOption(optionId) {
+            var options = localStorage_getItem('options');
+            if (isUndefined(options)) {
+                return false;
+            }
+            if (isUndefined(options[localStorage.getItem("product_type_id")])) {
+                return false;
+            }
+            if (isUndefined(options[localStorage.getItem("product_type_id")][optionId])) {
+                return false;
+            }
+            return true;
+        }
+        function selectProduct() {
+            var products = localStorage_getItem('products');
+            if (isUndefined(products))
+                products = [];
+
+            if (isUndefined(product))
+                return;
+            
+            products[localStorage.getItem("product_type_id")] = product;
+            localStorage_setItem('products', products);
+            localStorage.setItem('selected_product', true);
+            localStorage.setItem('selected_product_new', true);
+        }   
+        function removeProduct() {
+            var products = localStorage_getItem('products');
+            if (isUndefined(products))
+                return;
+            if (sUndefined(products[localStorage.getItem("product_type_id")]))
+                return;
+            delete products[localStorage.getItem("product_type_id")];
+            localStorage_setItem('products', products);
+
+            var app_options = localStorage_getItem('options');
+            if (isUndefined(app_options))
+                return;
+            if (isUndefined(app_options[localStorage.getItem("product_type_id")]))
+                return;
+            delete app_options[localStorage.getItem("product_type_id")];
+            localStorage_setItem('options', app_options);
+
+        }
+        function addOption(ii) {
+            var products = localStorage_getItem('products');
+            if (isUndefined(products) || isUndefined(products[localStorage.getItem("product_type_id")]))
+                return;
+
+            var app_options = localStorage_getItem('options');
+            if (isUndefined(app_options))
+                app_options = [];
+
+            if (isUndefined(app_options[localStorage.getItem("product_type_id")]))
+                app_options[localStorage.getItem("product_type_id")] = [];
+
+            app_options[localStorage.getItem("product_type_id")][options[ii]['id']] = options[ii];
+            localStorage_setItem('options', app_options);
+            localStorage.setItem('selected_product', true);
+        }
+        function removeOption(ii) {
+            var app_options = localStorage_getItem('options');
+            if (isUndefined(app_options))
+                return;
+
+            if (isUndefined(app_options[localStorage.getItem("product_type_id")]))
+                return;
+
+            if (isUndefined(app_options[localStorage.getItem("product_type_id")][options[ii]['id']]))
+                return;
+
+            delete app_options[localStorage.getItem("product_type_id")][options[ii]['id']];
+            localStorage_setItem('options', app_options);
+        }
+        function startAnim() {
+            if (!isUndefined(localStorage.getItem('selected_product_new'))) {
+                $("#btn-remove").hide();
+                $("#btn-select").show();
+                $("#btn-productadded").show();
+            } else
+            {
+                $("#btn-optionadded").show();
+            }
+            $("#top").animate({
+                opacity: 0.25
+                }, 2000, function(){
+                $("#top").css("opacity", 100);
+                    if (!isUndefined(localStorage.getItem('selected_product_new'))) {
+                        $("#btn-select").hide();
+                        $("#btn-remove").show();
+                        $("#btn-productadded").hide();
+                        localStorage.removeItem('selected_product_new');
+                    }else
+                    {
+                        $("#btn-optionadded").hide();
+                    }
+            });
+        }
+        </script>
+    </body>
+</html>
