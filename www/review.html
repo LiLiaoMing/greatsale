@@ -254,8 +254,8 @@
 
         function validateForm(){
 
-            var nameReg = /^[A-Za-z ]+$/;
-            var numberReg =  /^[0-9]+$/;
+            var nameReg = /^[A-Za-z 0-9]+$/;
+            var numberReg =  /^[0-9-]+$/;
             var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
 
             var name = $('#name').val();
