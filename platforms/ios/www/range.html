@@ -45,6 +45,7 @@
             db_name = localStorage.getItem('db_name');
             db = window.sqlitePlugin.openDatabase({name: db_name});
 
+            localStorage.removeItem('startoverClicked');
             // Contents
                         
             db.transaction(function(tx) {

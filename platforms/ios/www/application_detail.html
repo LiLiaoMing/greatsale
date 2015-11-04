@@ -7,7 +7,8 @@
                 <img id="logo" src="img/logo_safholland.png">
             </a>
             <h1>Product Selector</h1>
-            <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a>
+            <img class="btn" id="btn-startover" src="img/button_startover.png" onclick="setStartOverState();">
+            <a style="display: none;" href="range.html" class="btn" id="btn-confirm"><img src="img/button_confirm.png"></a>
             <a style="display: none;" href="review.html" class="btn" id="btn-review"><img src="img/button_review.png"></a>
             <!-- <a style="display: none;" href="#" class="btn" id="btn-close"><img src="img/button_close.png"></a>
             <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a>
@@ -48,6 +49,11 @@
             {  
                 $("#btn-review").show();
             }
+
+            if (isUndefined(localStorage.getItem('startoverClicked')))
+                $("#btn-startover").show();
+            else
+                $("#btn-confirm").show();
 
             // Contents
             $(".choose-title").html(localStorage.getItem("application_name"));
@@ -211,7 +217,7 @@
                                     
                                     ImgCache.getCachedFileURL (url, function(img_src, file_url) {
 
-                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product"><img src="'+ file_url +'" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br>' + option_btn_html + '</div></div><div class="selected-product-buttons"><a href="product.html" class="option-link" onclick="setData(' + ii + ');"><img src="img/button_change.png" class="selected-product-change"></a><a href="product_info.html" onclick="setData1(' + ii + ', ' + product['id'] + ', \'' + product['name'] + '\');"><img src="img/button_infoandoptions.png" class="selected-product-options"></a></div></div></div>');
+                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product" id="selected-product-' + data['id'] + '"><img src="'+ file_url +'" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br>' + option_btn_html + '</div></div><div class="selected-product-buttons"><a href="product.html" class="option-link" onclick="setData(' + ii + ');"><img src="img/button_change.png" class="selected-product-change"></a><a href="product_info.html" onclick="setData1(' + ii + ', ' + product['id'] + ', \'' + product['name'] + '\');"><img src="img/button_infoandoptions.png" class="selected-product-options"></a></div></div></div>');
 
                                         if ((ii == 1) && (product['no_secondary_suspension'] == 1))
                                             return;
@@ -220,8 +226,12 @@
 
                                     }, function(error){
                                         console.log("Error : " + error);
-                                    });
+                                        img        });
                                 }
+                            }
+                            else
+                            {
+                                build_body_option();
                             }
                         }
                         build_body_content();
@@ -229,7 +239,39 @@
                 }, function(e) {
                   console.log("ERROR: " + e.message);
                 });
-            }       
+            }
+
+            function build_body_option()
+            {
+                test_log("build_body_option");
+                options = localStorage_getItem('options');
+
+                for (var product_type_id in options)
+                {
+                    for (var option_id in options[product_type_id])
+                    {
+                        if (isUndefined(options[product_type_id][option_id]))
+                            continue;
+                        url = localStorage.getItem('server_base_url') + options[product_type_id][option_id]['image'];
+                        load_option_html(product_type_id, option_id, url);
+                    }
+                }
+
+//                test_log($("#content").html());
+            }
+
+            function load_option_html(product_type_id, option_id, url)
+            {
+                test_log("load_option_html");
+                ImgCache.getCachedFileURL (url, function(img_src, file_url) {
+                    sub_html = "";
+                    if (!isUndefined(options[product_type_id][option_id][0]))
+                        sub_html = options[product_type_id][option_id][0]['name'];
+                    $("#selected-product-" + product_type_id + " .selected-product-info").append('<div style="color : RGB(190, 190, 190);">' + sub_html + '</div>');
+                }, function(error){
+                    console.log("Error : " + error);
+                });
+            }
         }
         
         function setData(ii)
@@ -245,6 +287,59 @@
             localStorage.setItem('product_name', nname);
             localStorage.setItem('from_page', 'application_detail.html');
         }
+        function setStartOverState()
+        {
+            localStorage.setItem('startoverClicked', true);
+            $("#btn-startover").hide();
+            $("#btn-confirm").show();
+        }
          </script>
     </body>
 </html>
+
+<!--
+<h3>
+    <span class="choose-prefix">APPLICATION</span><br>
+    <span class="choose-title">Dry Van</span>
+</h3>
+<div class="item-select">
+    <div class="main-image-div">
+        <img class="main-application" style="width:100%" src="f1f6ef154.png">
+        <img src="637e698c6878f.png" class="overlay-image">
+        <img src="file:f2713820c409a9.png" class="overlay-image">
+    </div>
+    <div class="landing-review">
+        <div class="option-title">Landing Gear</div>
+        <div class="selected-product" id="selected-product-1">
+            <img src="file.png" class="selected-product-image">
+            <div class="selected-product-info">
+                <div class="selected-product-title">Atlas 55</div>
+                <div class="selected-product-text">The benchmark for lifting performance.<br>Lift Capacity: 55,000 lbs<br>Load Capacity: 170,000 lbs<br></div>
+            </div>
+            <img class="options-selected" src="img/overlay_optionsselected.png"><br>
+            <div class="options_name_list">
+
+                <div class="selected-product-info">
+                    <div class="selected-product-title">Removable Cushion Foot</div>
+                    <div style="color : RGB(190, 190, 190);">12" x 12" RCF</div>
+                </div>
+
+                <div class="cf"></div>
+            </div>
+        </div>
+    </div>
+    <div class="primary">
+        <div class="option-title">Primary Suspension</div>
+        <div class="selected-product">
+            <img src="7d1c48b0.png" class="selected-product-image">
+            <div class="selected-product-info">
+                <div class="selected-product-title">CBX40</div><div class="selected-product-text">Air-Ride Slider Suspension / Axle System<br>Capacity: 40,000 lbs (18,143 kg)<br><br></div>
+            </div>
+            <div class="selected-product-buttons">
+                <a href="product.html" class="option-link" onclick="setData(1);"><img src="img/button_change.png" class="selected-product-change"></a>
+                <a href="product_info.html" onclick="setData1(1, 2, 'CBX40');"><img src="img/button_infoandoptions.png" class="selected-product-options"></a>
+            </div>
+        </div>
+    </div>
+</div>
+-->

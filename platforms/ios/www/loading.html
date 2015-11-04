@@ -59,11 +59,11 @@
 
         function loadApp() {
 
-            if (!hostReachable())
-            {
+//            if (!hostReachable())
+//            {
                 loading_error_msg();
                 return;
-            }
+//            }
 
             // Initialize
             db = window.sqlitePlugin.openDatabase({name: db_name});

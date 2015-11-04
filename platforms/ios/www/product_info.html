@@ -205,7 +205,7 @@
                                                 
                     ImgCache.getCachedFileURL (url, function(img_src, file_url) {
                         
-                        $('#product-info-feature-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image"><div class="product-option-title">' + features[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setFeatureData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a></div><div class="cf"></div></div>');
+                        $('#product-info-feature-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image" onclick="setFeatureData(' + ii + ');"><div class="product-option-title">' + features[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setFeatureData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a></div><div class="cf"></div></div>');
                         ii++;
                         build_body_feature();
 
@@ -276,6 +276,8 @@
                         db.transaction(function(tx) {
                             tx.executeSql("select * from sub_options where option_id = " +  options[ii]['id'], [], function(tx, res) {
                                 option_html = "";
+                                optionselectedcheck_html = "";
+
                                 if (isSelectedProduct())
                                     option_html = '<a href="" onclick="addOption(' + ii + ');"><img src="img/button_addoption_main.png" class="product-option-info-btn"></a>';
 
@@ -284,10 +286,12 @@
 
                                 if (isAddedOption(options[ii]['id'])) {
                                     option_html = '<a href="" onclick="removeOption(' + ii + ');"><img src="img/button_removeoption_amber.png" class="product-option-info-btn"></a>';
+                                    optionselectedcheck_html = '<img src="img/overlay_optionselectedcheck.png" style="position:absolute;left:0;top:0;width:30px;">';
+                                    test_log(optionselectedcheck_html);
 //                                    option_html = '<img src="img/button_removeoption_amber.png" class="product-option-info-btn" onclick="removeOption(' + ii + ');">';
                                 }
 
-                                $('#product-info-option-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image"><div class="product-option-title">' + options[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setOptionData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a>' + option_html + '</div><div class="cf"></div></div>');
+                                $('#product-info-option-div').append('<div class="product-option-div"><img src="' + file_url + '" class="product-option-image" onclick="setOptionData(' + ii + ');">' + optionselectedcheck_html + '<div class="product-option-title">' + options[ii]['name'] + '</div><div class="product-option-buttons"><a href="feature.html" onclick="setOptionData(' + ii + ');"><img src="img/button_learnmore.png" class="product-option-info-btn"></a>' + option_html + '</div><div class="cf"></div></div>');
                                 ii++;
                                 build_body_option();
                             });
@@ -298,6 +302,9 @@
                         console.log("Error : " + error);
                     });
                 }
+                else{
+//                    test_log($("#content").html());
+                }
             }
 
         }
@@ -306,13 +313,15 @@
         {
             localStorage.setItem('feature_type', 'feature');
             localStorage.setItem('feature_id', features[ii]['id']);            
-            localStorage.setItem('feature_name', features[ii]['name']);            
+            localStorage.setItem('feature_name', features[ii]['name']);
+            window.location.href = "feature.html";
         }
         function setOptionData(ii)
         {
             localStorage.setItem('feature_type', 'option');
             localStorage.setItem('feature_id', options[ii]['id']);            
-            localStorage.setItem('feature_name', options[ii]['name']);            
+            localStorage.setItem('feature_name', options[ii]['name']);
+            window.location.href = "feature.html";
         }
 
         function isSelectedProduct() {
@@ -429,3 +438,58 @@
         </script>
     </body>
 </html>
+
+<!--
+<h3>
+    <span class="choose-prefix">INFO &amp; OPTIONS</span><br>
+    <span class="choose-title">CBX40</span>
+</h3>
+<div class="item-select">
+    <div class="product-top-div">
+        <div class="product-info-div">
+            <a href="model.html"><img style="width:100%;" src="f48b0.png" class="product-info-image"></a>
+            <img src="img/overlay_tapimagetozoom.png" class="product-image-zoom">
+        </div>
+        <div class="product-info-div">
+            <img src="f398b.png" class="product-brand-image">
+            <div class="product-info-title">CBX40</div>
+            <div class="product-info-text">
+                <strong>Air-Ride Slider Suspension / Axle System</strong><br><br>Capacity: 40,000 lbs (18,143 kg)<br><br><br>Ride Heights: 16", 16.5", 17", and 18"<br>Trailing Arm Length: 26.5"<br>
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div class="product-bottom-div"></div>
+        <div id="product-info-feature-div" class="product-info-div">
+            <div class="product-section-title">Key Features</div>
+                <div class="product-info-features"></div>
+                    <div class="product-option-div">
+                        <img src="file.png" class="product-option-image">
+                        <div class="product-option-title">5.75 Inch Round Axle</div>
+                        <div class="product-option-buttons">
+                            <a href="feature.html" onclick="setFeatureData(0);"><img src="img/button_learnmore.png" class="product-option-info-btn"></a>
+                        </div>
+                        <div class="cf"></div>
+                    </div>
+                    ....
+                </div>
+                <div id="product-info-option-div" class="product-info-div">
+                    <div class="product-section-title">Options</div>
+                    <div class="product-info-options"></div>
+                    <div class="product-option-div">
+                        <img src="file.png" class="product-option-image">
+                        <div class="product-option-title">Air Release Pin Pull</div>
+                        <div class="product-option-buttons">
+                            <a href="feature.html" onclick="setOptionData(0);"><img src="img/button_learnmore.png" class="product-option-info-btn"></a>
+                            <a href="" onclick="addOption(0);"><img src="img/button_addoption_main.png" class="product-option-info-btn"></a>
+                        </div>
+                        <div class="cf"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="cf"></div>
+
+-->

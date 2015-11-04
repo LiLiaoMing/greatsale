@@ -116,7 +116,7 @@
                                     
                                     ImgCache.getCachedFileURL (url, function(img_src, file_url) {
                             
-                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product" id="selected-product-' + data['id'] + '"><img src="'+ file_url +'" class="selected-product-image"><div class="selected-product-info"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br></div></div>' + option_btn_html + '</div></div>');
+                                        $('.item-select').append('<div class="' + classes[ii] + '"><div class="option-title">' + data['name'] + '</div><div class="selected-product" id="selected-product-' + data['id'] + '"><img src="'+ file_url +'" class="selected-product-image" onclick="gotoPorductInfo(' + product['id'] + ', \'' + product['name'] + '\');"><div class="selected-product-info" onclick="gotoPorductInfo(' + product['id'] + ', \'' + product['name'] + '\');"><div class="selected-product-title">' + product['name'] + '</div><div class="selected-product-text">' + product['preview_description'] + '<br>' + product['preview_capacity_info_1'] + '<br>' + product['preview_capacity_info_2'] + '<br></div></div>' + option_btn_html + '</div></div>');
 
                                         ii++;
                                         build_body_content();
@@ -197,10 +197,12 @@
                     saveData.products[i] = saveProduct;
                 }
 
-                test_log(JSON.stringify(saveData));
+//                test_log(JSON.stringify(saveData));
                 $(".item-select").append('<div class="cf"></div><form class="form-info" id ="form-info" method="POST" ><div class="form-title-1">Customer</div><div class="form-title-2">Information</div><input placeholder="Name*" name="name" id="name" class="form-input"><input placeholder="Company" name="company" class="form-input"><div class="cf"></div><input placeholder="Email*" name="email" id="email" class="form-input"><input placeholder="Phone" name="phone" id="phone" class="form-input"><div class="cf"></div><input placeholder="Address 1" name="address1" class="form-input"><input placeholder="Address 2" name="address2" class="form-input"><div class="cf"></div><input placeholder="City" name="city" class="form-input"><input placeholder="State / Province" name="state" class="form-input"><div class="cf"></div><input placeholder="Zip / Postal Code" name="zip" id="zip" class="form-input"><input placeholder="Country" name="country" class="form-input"><div class="cf"></div><textarea placeholder="Notes" name="notes" class="form-text"></textarea><input value="' + JSON.stringify(saveData) + '" name="save_data" type="hidden"><div class="form-buttons"><span class="error"></span><img id="btn-save-and-email" src="img/button_saveandemail.png" class="form-button"  onclick="submitSave();"></div></form>');
 
                 $("body").append('<div class="scroll-for-more"><a href="#form-info"><img src="img/overlay_scrollformore.png"></a></div>');
+
+//                test_log($("#content").html());
             }
         }
 
@@ -307,6 +309,95 @@
             localStorage.setItem('product_name', nname);
             localStorage.setItem('from_page', 'application_detail.html');
         }
+
+        function gotoPorductInfo(_id, _name)
+        {
+            test_log("gotoPro");
+            localStorage.setItem('product_id', _id);
+            localStorage.setItem('product_name', _name);
+            localStorage.setItem('from_page', 'review.html');
+
+            window.location.href = "product_info.html";
+        }
          </script>
     </body>
 </html>
+
+<!--
+<h3 style="float:left; margin-right:30px; margin-bottom:40px">
+    <span class="choose-prefix">PRODUCTS SELECTED FOR</span><br>
+    <span class="choose-title">Dry Van</span>
+</h3>
+<div style="clear:both"></div>
+<div class="item-select">
+    <div class="landing-review">
+        <div class="option-title">Landing Gear</div>
+        <div class="selected-product" id="selected-product-1">
+            <img src="file.png" class="selected-product-image">
+            <div class="selected-product-info">
+                <div class="selected-product-title">Atlas 55</div>
+                <div class="selected-product-text">The benchmark for lifting performance.<br>Lift Capacity: 55,000 lbs<br>Load Capacity: 170,000 lbs<br></div>
+            </div>
+            <img class="options-selected" src="img/overlay_optionsselected.png"><br>
+            <div class="options_name_list">
+                <img src="file.png" class="selected-product-image">
+                <div class="selected-product-info">
+                    <div class="selected-product-title">Removable Cushion Foot</div>
+                    <div style="color : RGB(190, 190, 190);">12" x 12" RCF</div>
+                </div>
+
+                <div class="cf"></div>
+            </div>
+        </div>
+    </div>
+    <div class="primary">
+        <div class="option-title">Primary Suspension</div>
+        <div class="selected-product" id="selected-product-2">
+            <img src="file.png" class="selected-product-image">
+            <div class="selected-product-info">
+                <div class="selected-product-title">CBX40</div>
+                <div class="selected-product-text">Air-Ride Slider Suspension / Axle System<br>Capacity: 40,000 lbs (18,143 kg)<br><br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="secondary">
+        <div class="option-title">Secondary Suspension</div>
+    </div>
+
+    <div class="cf"></div>
+    <form class="form-info" id="form-info" method="POST">
+        <div class="form-title-1">Customer</div>
+        <div class="form-title-2">Information</div>
+        <input placeholder="Name*" name="name" id="name" class="form-input">
+        <input placeholder="Company" name="company" class="form-input">
+
+        <div class="cf"></div>
+        <input placeholder="Email*" name="email" id="email" class="form-input">
+        <input placeholder="Phone" name="phone" id="phone" class="form-input">
+
+        <div class="cf"></div>
+        <input placeholder="Address 1" name="address1" class="form-input">
+        <input placeholder="Address 2" name="address2" class="form-input">
+
+        <div class="cf"></div>
+        <input placeholder="City" name="city" class="form-input">
+        <input placeholder="State / Province" name="state" class="form-input">
+        <div class="cf"></div>
+
+        <input placeholder="Zip / Postal Code" name="zip" id="zip" class="form-input">
+        <input placeholder="Country" name="country" class="form-input">
+
+        <div class="cf"></div>
+
+        <textarea placeholder="Notes" name="notes" class="form-text"></textarea>
+
+        <input value="{" application":"1","products":{"1":{"id":1,"options":{}},"2":{"id":2,"options":{}}}}"="" name="save_data" type="hidden">
+
+        <div class="form-buttons">
+            <span class="error"></span>
+            <img id="btn-save-and-email" src="img/button_saveandemail.png" class="form-button" onclick="submitSave();">
+        </div>
+    </form>
+</div>
+-->
