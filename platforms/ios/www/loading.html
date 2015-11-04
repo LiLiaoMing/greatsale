@@ -59,11 +59,11 @@
 
         function loadApp() {
 
-//            if (!hostReachable())
-//            {
+            if (!hostReachable())
+            {
                 loading_error_msg();
                 return;
-//            }
+            }
 
             // Initialize
             db = window.sqlitePlugin.openDatabase({name: db_name});
@@ -180,7 +180,8 @@
                                 'image text, ' + 
                                 'video_file text, ' + 
                                 'video_url text, ' + 
-                                'description text, ' + 
+                                'description text, ' +
+                                'ranking integer, ' +
                                 'created_at text, ' + 
                                 'updated_at text, ' + 
                                 'thumbnail text)');
@@ -483,9 +484,9 @@
                     if (table[i]['new'] != 0 )
                         continue;
                     tx.executeSql('INSERT INTO media ' +
-                        '(id, media_type, name, image, video_file, video_url, description, created_at, updated_at, thumbnail) ' +
-                        'VALUES (?,?,?,?,?,?,?,?,?,?)',  
-                        [table[i]['id'], table[i]['media_type'], table[i]['name'], table[i]['image'], table[i]['video_file'], table[i]['video_url'], table[i]['description'], table[i]['created_at'], table[i]['updated_at'], table[i]['thumbnail']], 
+                        '(id, media_type, name, image, video_file, video_url, description, created_at, updated_at, thumbnail, ranking) ' +
+                        'VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                        [table[i]['id'], table[i]['media_type'], table[i]['name'], table[i]['image'], table[i]['video_file'], table[i]['video_url'], table[i]['description'], table[i]['created_at'], table[i]['updated_at'], table[i]['thumbnail'], table[i]['ranking']],
                         function(tx, res) {
                               print_pos("Inserted (media): " + res.insertId );
                         },function(e) {

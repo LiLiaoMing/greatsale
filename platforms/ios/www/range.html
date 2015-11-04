@@ -38,7 +38,8 @@
 
 
         function onDeviceReady() {
-            
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
             console.log("======================range.html=====  =====================");
             // Initialize
             initImgCache();

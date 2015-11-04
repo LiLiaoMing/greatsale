@@ -37,6 +37,8 @@
         document.addEventListener('deviceready', onDeviceReady, false);
 
         function onDeviceReady() {
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
             console.log("======================application_detail.html==========================");
             // Initialize
             initImgCache();

@@ -40,6 +40,8 @@
         document.addEventListener('deviceready', onDeviceReady, false);
 
         function onDeviceReady() {
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
             console.log("======================product.html==========================");
             // Initialize
             initImgCache();

@@ -42,6 +42,8 @@
         document.addEventListener('deviceready', onDeviceReady, false);
 
         function onDeviceReady() {
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
             console.log("======================feature.html==========================");
             console.log("type : " + localStorage.getItem('feature_type'));
             console.log("id : " + localStorage.getItem('feature_id'));
@@ -180,7 +182,7 @@
                 db.transaction(function(tx) {
                     for(i=0; i<media_ids.length; i++)
                     {
-                        tx.executeSql("select * from media where id = " +  media_ids[i], [], function(tx, res) {
+                        tx.executeSql("select * from media where id = " +  media_ids[i] + " order by ranking" , [], function(tx, res) {
 
                             medias.push(res.rows.item(0));
                             async_func_num--;

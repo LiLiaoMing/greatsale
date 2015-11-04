@@ -7,13 +7,13 @@
                 <img id="logo" src="img/logo_safholland.png">
             </a>
             <h1>Product Selector</h1>
-            <!-- <a style="display: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
+            <!-- <a style="def="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a> -->
+            <!-- <a href="#" class="btn" id="btn-addoptisplay: inline;" href="range.html" class="btn" id="btn-startover"><img src="img/button_startover.png"></a> -->
             <!-- <a style="display: inline;" href="#" class="btn" id="btn-review"><img src="img/button_review.png"></a> -->
             <a style="display: inline;" href="application_detail.html" class="btn" id="btn-close"><img src="img/button_close.png"></a>
             <a style="display: none;" href="product_info.html" class="btn" id="btn-select" onclick="selectProduct();"><img src="img/button_select_header.png"></a>
             <a style="display: none;" href="" class="btn" id="btn-remove" onclick="removeProduct();"><img src="img/button_remove.png"></a>
-            <!-- <a style="display: none;" href="#" class="btn" id="btn-noneskip"><img src="img/button_noneskip.png"></a> -->
-            <!-- <a href="#" class="btn" id="btn-addoption"><img src="img/button_addoption.png"></a> -->
+            <!-- <a style="display: none;" hrion"><img src="img/button_addoption.png"></a> -->
             <div class="cf"></div>
             <img id="btn-optionadded" src="img/overlay_optionadded.png" style="display:none;position:absolute;width:100%; left:0px; top:0px;">
             <img id="btn-productadded" src="img/overlay_productselected.png" style="display:none;position:absolute;width:100%; left:0px; top:0px;">
@@ -54,7 +54,8 @@
         document.addEventListener('deviceready', onDeviceReady, false);
 
         function onDeviceReady() {
-
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
             console.log("======================product_info.html==========================");
             // Initialize
 
@@ -177,7 +178,7 @@
                 db.transaction(function(tx) {
                     for(i=0; i<feature_ids.length; i++)
                     {
-                        tx.executeSql("select * from features where id = " +  feature_ids[i], [], function(tx, res) {
+                        tx.executeSql("select * from features where id = " +  feature_ids[i] + " order by ranking" , [], function(tx, res) {
                  
                             features.push(res.rows.item(0));
                             async_func_num--;
@@ -245,7 +246,7 @@
                 db.transaction(function(tx) {
                     for(i=0; i<option_ids.length; i++)
                     {
-                        tx.executeSql("select * from options where id = " +  option_ids[i], [], function(tx, res) {
+                        tx.executeSql("select * from options where id = " +  option_ids[i] + " order by ranking" , [], function(tx, res) {
                  
                             options.push(res.rows.item(0));
                             async_func_num--;
@@ -367,7 +368,7 @@
             var products = localStorage_getItem('products');
             if (isUndefined(products))
                 return;
-            if (sUndefined(products[localStorage.getItem("product_type_id")]))
+            if (isUndefined(products[localStorage.getItem("product_type_id")]))
                 return;
             delete products[localStorage.getItem("product_type_id")];
             localStorage_setItem('products', products);

@@ -63,7 +63,34 @@ function hostReachable() {
         return false;
     }
 }
+function isRealValue(obj) {
+    return obj && obj !== "null" && obj !== "undefined";
+}
 
+function deviceResumeFunc() {
+    test_log("deviceResumeFunc()");
+    var dt = new Date();
+    var now = dt.getTime();
+
+    lasttime = localStorage.getItem('from_time');
+    if (isRealValue(lasttime))
+    {
+        var during = (parseInt(now) - parseInt(lasttime))/3600000;
+
+        if (parseFloat(during) > 0.5)
+        {
+            window.location.href = "loading.html";
+        }
+    }
+}
+
+function devicePauseFunc() {
+    test_log("devicePauseFunc()");
+    var dt = new Date();
+    var now = dt.getTime();
+
+    localStorage.setItem('from_time', now);
+}
 function test_log(msg) {
     console.log("%c" + msg, "color:#080;");
 }

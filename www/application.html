@@ -35,6 +35,9 @@
         document.addEventListener('deviceready', onDeviceReady, false);
 
         function onDeviceReady() {
+            document.addEventListener("resume", deviceResumeFunc, false);
+            document.addEventListener("pause", devicePauseFunc, false);
+
             console.log("======================application.html==========================");
             // Initialize
             initImgCache();
@@ -45,7 +48,7 @@
             $(".choose-title").html(localStorage.getItem("range_name") + " Application");
 
             db.transaction(function(tx) {
-                tx.executeSql("select * from applications where range_id = " + localStorage.getItem('range_id') , [], function(tx, res) {
+                tx.executeSql("select * from applications where range_id = " + localStorage.getItem('range_id') + " order by ranking" , [], function(tx, res) {
 
                     var ii = 0;
                     function build_body() {
