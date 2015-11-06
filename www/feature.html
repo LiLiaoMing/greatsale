@@ -73,7 +73,8 @@
                 if (!isUndefined(options) && !isUndefined(options[localStorage.getItem("product_type_id")]) && !isUndefined(options[localStorage.getItem("product_type_id")][localStorage.getItem("feature_id")]))
                     $("#btn-remove").show();
                 else
-                    $("#btn-add-option").show();
+                    if (isSelectedProduct())
+                        $("#btn-add-option").show();
                 
                 $(".choose-prefix").html("OPTION");
                 feature_table="options";
@@ -139,8 +140,10 @@
             function build_body_sub_options() {
 
                 if( ii < sub_options.length) {
-
-                    $('.option-info-div').append('<div class="option-media-item"><img src="img/button_addoption_main.png" class="product-option-info-btn" onclick="addOptionWithSub(' + ii + ');"><div class="option-media-title">' + sub_options[ii]['name'] + '</div><div class="option-media-text">' + sub_options[ii]['description'] + '</div><div class="option-media-text">' + sub_options[ii]['size'] + '</div></div>');
+                    option_html = '';
+                    if (isSelectedProduct())
+                        option_html = '<img src="img/button_addoption_main.png" class="product-option-info-btn" onclick="addOptionWithSub(' + ii + ');">';
+                    $('.option-info-div').append('<div class="option-media-item">'+ option_html +'<div class="option-media-title">' + sub_options[ii]['name'] + '</div><div class="option-media-text">' + sub_options[ii]['description'] + '</div><div class="option-media-text">' + sub_options[ii]['size'] + '</div></div>');
                     ii++;
                     build_body_sub_options();
                 }
@@ -268,6 +271,19 @@
                 this.currentTime = 0;
                 this.pause();
             })
+        }
+
+        function isSelectedProduct() {
+
+            var products = localStorage_getItem('products');
+            if (isUndefined(products))
+                return false;
+            if (isUndefined(products[localStorage.getItem("product_type_id")]))
+                return false;
+            if (products[localStorage.getItem("product_type_id")]['id'] != localStorage.getItem('product_id'))
+                return false;
+
+            return true;
         }
 
         function addOption()

@@ -65,19 +65,19 @@
     },
     "installed_plugins": {
         "com.brodysoft.sqlitePlugin": {
-            "PACKAGE_NAME": "com.great.sale"
+            "PACKAGE_NAME": "com.safholland.products"
         },
         "cordova-plugin-statusbar": {
-            "PACKAGE_NAME": "com.great.sale"
+            "PACKAGE_NAME": "com.safholland.products"
         },
         "org.apache.cordova.device": {
-            "PACKAGE_NAME": "com.great.sale"
+            "PACKAGE_NAME": "com.safholland.products"
         },
         "org.apache.cordova.file": {
-            "PACKAGE_NAME": "com.great.sale"
+            "PACKAGE_NAME": "com.safholland.products"
         },
         "org.apache.cordova.file-transfer": {
-            "PACKAGE_NAME": "com.great.sale"
+            "PACKAGE_NAME": "com.safholland.products"
         }
     },
     "dependent_plugins": {}

@@ -96,6 +96,12 @@
             localStorage_setItem('products', products);
             localStorage.setItem('selected_product', true);
             localStorage.setItem('selected_product_new', true);
+
+            var app_options = localStorage_getItem('options');
+            if (isUndefined(app_options))
+                return;
+            app_options[localStorage.getItem("product_type_id")] = [];
+            localStorage_setItem('options', app_options);
         }
 
         function setData1(ii)
