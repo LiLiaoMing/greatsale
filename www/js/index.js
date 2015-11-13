@@ -77,7 +77,7 @@ function deviceResumeFunc() {
     {
         var during = (parseInt(now) - parseInt(lasttime))/3600000;
 
-        if (parseFloat(during) > 0.5)
+        if (parseFloat(during) > 8)
         {
             window.location.href = "loading.html";
         }

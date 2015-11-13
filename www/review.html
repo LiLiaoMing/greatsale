@@ -193,7 +193,7 @@
                             if (isUndefined(options[j]))
                                 continue;
                             var selectedOption = options[j];
-                            saveProduct.options[j] ='' +  selectedOption['id'];
+                            saveProduct.options[j] = {id:selectedOption['id']};
                         }
                     }
                     saveData.products[i] = saveProduct;

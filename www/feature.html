@@ -92,7 +92,7 @@
             function get_feature() {
 
                 db.transaction(function(tx) {
-                    tx.executeSql("select * from " + feature_table + " where id = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                    tx.executeSql("select * from " + feature_table + " where id = " + localStorage.getItem('feature_id') + " order by ranking"  , [], function(tx, res) {
                         feature = res.rows.item(0);
                         build_body();        
                     });
@@ -120,8 +120,13 @@
             var ii = 0;
 
             function get_sub_option_ids() {
+                if (localStorage.getItem('feature_type') == 'feature')
+                {
+                    get_media_ids();
+                    return;
+                }
                 db.transaction(function(tx) {
-                    tx.executeSql("select * from sub_options where option_id = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                    tx.executeSql("select * from sub_options where option_id = " + localStorage.getItem('feature_id')  , [], function(tx, res) {
                         for(i=0; i<res.rows.length; i++) {
                             sub_options[i] = res.rows.item(i);
                         }
@@ -164,7 +169,7 @@
             function get_media_ids() {
 
                 db.transaction(function(tx) {
-                    tx.executeSql("select * from " + feature_media_table + " where " + feature_id_field + " = " + localStorage.getItem('feature_id') , [], function(tx, res) {
+                    tx.executeSql("select * from " + feature_media_table + " where " + feature_id_field + " = " + localStorage.getItem('feature_id'), [], function(tx, res) {
                         async_func_num = res.rows.length;
                         
                         for(i=0; i<res.rows.length; i++) {
